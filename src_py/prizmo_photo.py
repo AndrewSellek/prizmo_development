@@ -9,7 +9,8 @@ from scipy import integrate
 import sys
 
 # Calculates the cross-section according to Verner for outer and inner shells
-def calc_crossSection_Verner(Z, Q, inner=True):
+def calc_crossSection_Verner(Z, Q, dN=1, maxdN=10, inner=True):
+    maxdN = min(maxdN,10)
     # Line counting
     #linesOuter = {}
     #linesOuterCount = 0
@@ -27,18 +28,21 @@ def calc_crossSection_Verner(Z, Q, inner=True):
     # Load Cross-section fit parameters
     outerData = np.genfromtxt('../data/photoionization_ions/ph2.dat', names=True)
     innerData = np.genfromtxt('../data/photoionization_ions/ph1b.dat', names=True)
+    AugerMeitnerLookup = np.genfromtxt('../data/photoionization_ions/auger.dat', names=['Z','stage','shell','maxdN'], usecols=(0,1,2,3))
+    AugerMeitnerYield = np.genfromtxt('../data/photoionization_ions/auger.dat', usecols=(4,5,6,7,8,9,10,11,12,13))#, names=['Z','stage','shell','maxdN']+['p{}'.format(n) for n in range(1,11)])
 
     # Initalise Energies and sigma
     E = np.geomspace(outerData['Eth'][dataLine], energy_max*erg2ev, 1000)
     print(np.min(E), np.max(E))
     sigma = np.zeros_like(E)
 
-    # Outer Shell (Verner et al. 1996)
-    sigma0 = outerData['sigma0'][dataLine]
-    x = E/outerData['E0'][dataLine] - outerData['y0'][dataLine]
-    y = np.sqrt(x**2+outerData['y1'][dataLine]**2)
-    F = ((x-1)**2 + outerData['yw'][dataLine]**2) * np.power(y,0.5*outerData['P'][dataLine]-5.5) * (1 + np.sqrt(y/outerData['ya'][dataLine]))**(-outerData['P'][dataLine])
-    sigma += 1e-18*sigma0*F
+    # Outer Shell (Verner et al. 1996); outer shell cannot have an Auger-Meitner effect and therefore only applies for dN=1.
+    if dN==1:
+        sigma0 = outerData['sigma0'][dataLine]
+        x = E/outerData['E0'][dataLine] - outerData['y0'][dataLine]
+        y = np.sqrt(x**2+outerData['y1'][dataLine]**2)
+        F = ((x-1)**2 + outerData['yw'][dataLine]**2) * np.power(y,0.5*outerData['P'][dataLine]-5.5) * (1 + np.sqrt(y/outerData['ya'][dataLine]))**(-outerData['P'][dataLine])
+        sigma += 1e-18*sigma0*F
 
     # Inner Shells (Verner & Yakovlev 1995)
     if inner:
@@ -48,7 +52,10 @@ def calc_crossSection_Verner(Z, Q, inner=True):
             sigma0 = innerData['sigma0'][dataLine]
             y = E/innerData['E0'][dataLine]
             F = ((y-1)**2 + innerData['yw'][dataLine]**2) * np.power(y,0.5*innerData['P'][dataLine]-5.5-innerData['l'][dataLine]) * (1 + np.sqrt(y/innerData['ya'][dataLine]))**(-innerData['P'][dataLine])
-            sigma += 1e-18*sigma0*F*(E>innerData['Eth'][dataLine])
+            AMYields = AugerMeitnerYield[(AugerMeitnerLookup['Z']==Z)*(AugerMeitnerLookup['stage']==Q+1)*(AugerMeitnerLookup['shell']==shell),:][0]
+            TotYield = np.sum(AMYields[0:maxdN])
+            AMYield = AMYields[dN-1]/TotYield
+            sigma += 1e-18*sigma0*F*(E>innerData['Eth'][dataLine])*AMYield
 
     return E, sigma
 
@@ -89,20 +96,25 @@ def prepare(photo_limits, species):
         Q = spec.count('+')
         if Q>=Z:
             continue
-        assert Q<Z, "Can't have charge > atomic number"
+        assert Q<Z, "Can't have charge >= atomic number, or ionization when charge == atomic number"
         N = Z-Q
 
         atom = natom2name[Z] + get_plus(Z - N)
         assert atom==spec, "Identification of atoms in photoionisation not working"
-        atom_ionized = natom2name[Z] + get_plus(Z - N + 1)
-        name_file = "%s__%s_E" % (atom, atom_ionized)
-        print("Calculate Verner cross sections for ", name_file)
+        maxdN=N
+        for dN in range(N,0,-1):
+            atom_ionized = natom2name[Z] + get_plus(Z - N + dN)
+            if not sp2idx(atom_ionized) in species:
+                maxdN = dN-1
+                continue
+            name_file = "%s__%s_E" % (atom, atom_ionized)
+            print("Calculate Verner cross sections for ", name_file)
 
-        erange_eV, xsecs = calc_crossSection_Verner(Z, Q)
-        erange = erange_eV * ev2erg
-        data_all[name_file] = {"energy": erange,
-                               "photoionisation": xsecs,
-                               "file": name_file + ".dat"}
+            erange_eV, xsecs = calc_crossSection_Verner(Z, Q, dN=dN, maxdN=maxdN)
+            erange = erange_eV * ev2erg
+            data_all[name_file] = {"energy": erange,
+                                   "photoionisation": xsecs,
+                                   "file": name_file + ".dat"}
 
     energy = find_energy(data_all, photo_limits)
     save_xsecs(energy, data_all)

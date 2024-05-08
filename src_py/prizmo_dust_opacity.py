@@ -2,7 +2,7 @@ import os.path
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from prizmo_commons import amin, amax, pslope, clight, hplanck, rho_bulk, erg2ev, print_title, fuv_energy1, fuv_energy2, plotOn, refInd_file
+from prizmo_commons import amin, amax, pslope, clight, hplanck, rho_bulk, erg2ev, print_title, fuv_energy1, fuv_energy2, plotOn, refInd_file, data_dir
 from prizmo_preprocess import preprocess
 from bhmie import bhmie_qabs
 from scipy.interpolate import interp1d
@@ -12,7 +12,7 @@ def prepare(user_energy):
 
     print_title("dust opacity")
 
-    fname = "../runtime_data/kappa_dust.dat"
+    fname = data_dir+"kappa_dust.dat"
     if os.path.isfile(fname):
         fk = np.loadtxt(fname).T
         kappa = compute_kabs_integral(user_energy, fk)

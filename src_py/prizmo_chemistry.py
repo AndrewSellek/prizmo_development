@@ -3,7 +3,7 @@ import sys
 import numpy as np
 from prizmo_preprocess import preprocess
 from prizmo_commons import nphoto, sp2idx, print_title, ev2erg, idx2sp, count_X, idx2spj, idx2mass, \
-    amin, amax, pslope, rho_bulk, kboltzmann, sp2mass, py2f90, use_reaction_prototypes
+    amin, amax, pslope, rho_bulk, kboltzmann, sp2mass, py2f90, use_reaction_prototypes, data_dir
 
 
 def prepare(fname="../networks/test.dat", main=False, speciesList=None):
@@ -111,7 +111,7 @@ def prepare(fname="../networks/test.dat", main=False, speciesList=None):
     # save verbatim reactions to file
     verbatim_reactions = [x.ljust(100) for x in verbatim_reactions]
     if not main:
-        open("../runtime_data/reactions.dat", "w").write("\n".join(verbatim_reactions))
+        open(data_dir+"reactions.dat", "w").write("\n".join(verbatim_reactions))
 
     # useful PLUTO variables saved to file
     species_pluto = ["#define IDX_CHEM_%s (NFLX + NIONS + %d)" % (idx2spj(x), i) for i, x in enumerate(species)]
@@ -163,7 +163,7 @@ def prepare(fname="../networks/test.dat", main=False, speciesList=None):
         preprocess("../prizmo_utils.f90", xnuclei_pragma)
         preprocess("../prizmo.f90", {"INDEXES": indexes})
 
-        open("../runtime_data/energy_thresholds.dat", "w").write(photo_thresholds)
+        open(data_dir+"energy_thresholds.dat", "w").write(photo_thresholds)
 
     return species, np.array(photo_limits)
 

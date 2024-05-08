@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 # import ChiantiPy.core as ch
 from tqdm import tqdm
-from prizmo_commons import idx2sp, kboltzmann, clight, hplanck, print_title, plotOn, sp2spj
+from prizmo_commons import idx2sp, kboltzmann, clight, hplanck, print_title, plotOn, sp2spj, data_dir
 from prizmo_preprocess import preprocess
 from scipy.interpolate import interp1d
 import sys
@@ -111,7 +111,7 @@ def prepare_atomic_cooling_tables(species_indexes):
     for a in atoms:
         ii = avail_coolants.index(a)
         plt.clf()
-        fname = "../runtime_data/cool_%s.dat" % a
+        fname = data_dir+"cool_%s.dat" % a
         fname_database = "../data/atomic_cooling/cool_%s.dat" % a
         if os.path.isfile(fname):
             print("skipping, cooling file found", fname)
@@ -261,15 +261,16 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000):
             for j in range(nlevels):
                 if j != i:
                     kname = "k%d%d" % (j, i)
-                    # fhk[j][i] = open("../runtime_data/cool_%s_%s_%s.dat" % (atom, collider, kname), "w")
+                    # fhk[j][i] = open(data_dir+"cool_%s_%s_%s.dat" % (atom, collider, kname), "w")
                 else:
                     kname = "".join(["k"+str(i)+str(k) for k in range(nlevels) if k != i])
-                ffname = "../runtime_data/cool_%s_%s_%s.dat" % (atom, collider, kname)
+                vnames.append(kname)
+
+                ffname = data_dir+"cool_%s_%s_%s.dat" % (atom, collider, kname)
                 if os.path.isfile(ffname):
                     print("skipping, cooling file found", ffname)
                     continue
                 fhk[j][i] = open(ffname, "w")
-                vnames.append(kname)
 
         fnames = ["\"runtime_data/cool_%s_%s_%s.dat\"" % (atom, collider, x) for x in vnames]
 

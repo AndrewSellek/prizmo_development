@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from prizmo_commons import print_title, plotOn
+from prizmo_commons import print_title, plotOn, data_dir
 
 
 def prepare():
@@ -23,11 +23,11 @@ def prepare():
         coolH2e[i] = np.clip(fH2e(temp), 1e-80, 1e99)
         coolHDL[i] = np.clip(fHDL(temp), 1e-80, 1e99)
 
-    np.savetxt("../runtime_data/cool_H2_H.dat", np.array([trange, coolH2H]).T)
-    np.savetxt("../runtime_data/cool_H2_Hj.dat", np.array([trange, coolH2Hj]).T)
-    np.savetxt("../runtime_data/cool_H2_H2.dat", np.array([trange, coolH2H2]).T)
-    np.savetxt("../runtime_data/cool_H2_e.dat", np.array([trange, coolH2e]).T)
-    np.savetxt("../runtime_data/cool_H2_HDL.dat", np.array([trange, coolHDL]).T)
+    np.savetxt(data_dir+"cool_H2_H.dat", np.array([trange, coolH2H]).T)
+    np.savetxt(data_dir+"cool_H2_Hj.dat", np.array([trange, coolH2Hj]).T)
+    np.savetxt(data_dir+"cool_H2_H2.dat", np.array([trange, coolH2H2]).T)
+    np.savetxt(data_dir+"cool_H2_e.dat", np.array([trange, coolH2e]).T)
+    np.savetxt(data_dir+"cool_H2_HDL.dat", np.array([trange, coolHDL]).T)
 
     if plotOn:
         plt.loglog(trange, coolH2Hj, label="H+")

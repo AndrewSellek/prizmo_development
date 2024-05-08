@@ -12,13 +12,13 @@ import prizmo_heating_cooling
 import prizmo_main
 import numpy as np
 import warnings
-from prizmo_commons import init, idx2sp, chemNet, atomData, radiation_type, plotOn, erg2ev, args
+from prizmo_commons import init, idx2sp, chemNet, atomData, radiation_type, plotOn, erg2ev, args, data_dir
 from prizmo_preprocess import preprocess
 
 np.seterr(divide="raise", over="raise", invalid="raise")
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-init()
+init(data_dir)
 
 species, photo_limits = prizmo_chemistry.prepare(fname=chemNet)
 species_names = [idx2sp(x) for x in species]
@@ -53,7 +53,7 @@ prizmo_heating_cooling.prepare(H2_inc, CO_inc)
 
 prizmo_main.prepare(H2_inc, CO_inc)
 
-f = open("../runtime_data/README.txt","w")
+f = open(data_dir+"README.txt","w")
 for arg, val in args.__dict__.items():
     f.write("{}: {}\n".format(arg, val))
 f.close()

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp2d
-from prizmo_commons import print_title, plotOn
+from prizmo_commons import print_title, plotOn, data_dir
 
 
 def prepare(H2_inc, CO_inc):
@@ -46,7 +46,7 @@ def shielding_H2(nt=100, nn=30):
     else:
         plt.close()
 
-    fout = open("../runtime_data/shielding_H2.dat", "w")
+    fout = open(data_dir+"shielding_H2.dat", "w")
     fout.write(out)
     fout.close()
 
@@ -92,6 +92,6 @@ def shielding_CO(nco=50, nh2=50):
         for xNH2 in np.logspace(np.log10(NH2.min()), np.log10(NH2).max(), nh2):
             out += "%.18e %.18e %.18e\n" % (xNCO, xNH2, 1e1**f_shield(np.log10(xNH2), np.log10(xNCO)) + 1e-40)
 
-    fh = open("../runtime_data/shielding_CO.dat", "w")
+    fh = open(data_dir+"shielding_CO.dat", "w")
     fh.write(out)
     fh.close()

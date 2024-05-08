@@ -1,4 +1,4 @@
-from prizmo_commons import clight, hplanck, amin, amax, kboltzmann, pmass, rho_bulk, pslope, print_title, plotOn, refInd_file
+from prizmo_commons import clight, hplanck, amin, amax, kboltzmann, pmass, rho_bulk, pslope, print_title, plotOn, refInd_file, data_dir
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
@@ -22,7 +22,7 @@ def prepare(user_energy_eV, ne=100, nt=100, ng=50):
 
     print_title("dust temperature and cooling")
 
-    fname_grid = "../runtime_data/tdust_grid.dat"
+    fname_grid = data_dir+"tdust_grid.dat"
     if os.path.isfile(fname_grid):
         print("skipping, tdust grid file found", fname_grid)
         return
@@ -34,7 +34,7 @@ def prepare(user_energy_eV, ne=100, nt=100, ng=50):
     out = "# energy/eV, Ea pre-integral\n"
     for e in user_energy_eV:
         out += "%.18e %.18e\n" % (e, 1e1**Cabs(np.log10(e)))
-    fh = open("../runtime_data/tdust_Ea_preint.dat", "w")
+    fh = open(data_dir+"tdust_Ea_preint.dat", "w")
     fh.write(out)
     fh.close()
 
@@ -109,14 +109,14 @@ def prepare(user_energy_eV, ne=100, nt=100, ng=50):
 
     # save cooling results to file, (Ea, Tgas, ngas, cooling)
     # note: it should be multiplied by rho_dust and d2g in the main code
-    fh = open("../runtime_data/dust_cooling_grid.dat", "w")
+    fh = open(data_dir+"dust_cooling_grid.dat", "w")
     fh.write("# Ea, Tgas, ngas, cooling/d2g/rho_d\n")
     fh.write(out_cool)
     fh.close()
 
     # save heating results to file, (Ea, Tgas, ngas, heating)
     # note: it should be multiplied by rho_dust and d2g in the main code
-    fh = open("../runtime_data/dust_heating_grid.dat", "w")
+    fh = open(data_dir+"dust_heating_grid.dat", "w")
     fh.write("# Ea, Tgas, ngas, heating/d2g/rho_d\n")
     fh.write(out_heat)
     fh.close()

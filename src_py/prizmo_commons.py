@@ -61,6 +61,8 @@ parser.add_argument("--energy_minmax", "-E", type=float, nargs='+', default=[ene
 parser.add_argument("--dust_minmax", "-d", type=float, nargs='+', default=[amin, amax], help='Specify the maximum and minimum dust grain sizes (default: {})'.format([amin,amax]))
 parser.add_argument("--refInd_file", "-e", type=str, default=refInd_file, help='Specify the refactory index file (default: {})'.format(refInd_file))
 parser.add_argument("--plot", "-p", action='store_true', help='Show plots produced by each stage')
+parser.add_argument("--append", "-A", type=str, default='', help='Append to the default runtime_data directory name')
+
 args = parser.parse_args()
 input_file = args.input
 chemNet = args.chemNet
@@ -73,6 +75,7 @@ amin = min(args.dust_minmax)
 amax = max(args.dust_minmax)
 refInd_file = args.refInd_file
 plotOn = args.plot
+data_dir = "../runtime_data{}/".format(args.append)
 
 def parse_input_file(fname):
     opts = dict()
@@ -137,10 +140,10 @@ name2natom = {el: Z for Z, el in natom2name.items()}
 
 ### Useful Functions
 
-def init():
+def init(dirName = "../runtime_data/"):
     import os
-    if not os.path.exists("../runtime_data/"):
-        os.makedirs("../runtime_data/")
+    if not os.path.exists(dirName):
+        os.makedirs(dirName)
 
 
 def sp2spj(sp):

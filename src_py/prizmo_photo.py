@@ -1,6 +1,6 @@
 from prizmo_commons import clight, hplanck, nphoto, kboltzmann, erg2ev, ev2erg, \
     hplanck_eV, energy_min, energy_max, print_title, photo_logspacing, natom2name, name2natom, sp2idx, idx2sp, \
-    fuv_energy1, fuv_energy2, radiation_type
+    fuv_energy1, fuv_energy2, radiation_type, data_dir
 from prizmo_preprocess import preprocess
 import numpy as np
 from glob import glob
@@ -190,7 +190,7 @@ def find_energy(data_all, photo_limits):
     if len(energy) != nphoto:
         sys.exit("ERROR: number of created energy points is different from expected!")
 
-    np.savetxt("../runtime_data/energy.dat", energy)
+    np.savetxt(data_dir+"energy.dat", energy)
     return energy
 
 
@@ -203,7 +203,7 @@ def save_xsecs(energy, data_all):
             what = "photodissociation"
         f = interp1d(np.log10(data["energy"]), np.log10(data[what] + 1e-80), bounds_error=False, fill_value=-80.)
         xsecs = 1e1**f(np.log10(energy))
-        np.savetxt("../runtime_data/photo_xsecs_%s.dat" % file_name, xsecs)
+        np.savetxt(data_dir+"photo_xsecs_%s.dat" % file_name, xsecs)
 
 
 def fplanck(energy, tbb):
@@ -214,7 +214,7 @@ def fplanck(energy, tbb):
 
 def prepare_bb_radiation(energy, tbb=7775.):
     bfield = fplanck(energy, tbb)
-    np.savetxt("../runtime_data/radiation_field.dat", bfield)
+    np.savetxt(data_dir+"radiation_field.dat", bfield)
 
 
 def get_draine_field(energy):
@@ -225,14 +225,14 @@ def get_draine_field(energy):
 
 def prepare_draine_radiation(energy):
     bfield = get_draine_field(energy)
-    np.savetxt("../runtime_data/radiation_field.dat", bfield)
+    np.savetxt(data_dir+"radiation_field.dat", bfield)
 
 
 def prepare_xdr(energy):
     # read: eV, eV/cm2/Hz/s
     energy_xdr, flux_xdr = np.loadtxt("../data/spectra/xdr_spectrum.dat").T
     fxdr = interp1d(np.log10(energy_xdr * ev2erg), np.log10(flux_xdr * ev2erg), fill_value=-99., bounds_error=False)
-    np.savetxt("../runtime_data/radiation_field.dat", 1e1**fxdr(np.log10(energy)))
+    np.savetxt(data_dir+"radiation_field.dat", 1e1**fxdr(np.log10(energy)))
 
 
 def prepare_external_spec(energy, spectrum, L_X=1e30, X_lo=1e2, X_hi=1e4, rstar=6.957e10, add_BB=False, Lacc=None, fluxUnits='energy'):
@@ -290,7 +290,7 @@ def prepare_external_spec(energy, spectrum, L_X=1e30, X_lo=1e2, X_hi=1e4, rstar=
         ffill = Lacc * (TFUV/5780)**-4 * (rstar/6.957e10)**-2
         bfield += ffill * fplanck(energy, TFUV)
 
-    np.savetxt("../runtime_data/radiation_field.dat", bfield)
+    np.savetxt(data_dir+"radiation_field.dat", bfield)
 
 
 def compute_habing_flux(energy):

@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d, interp2d
 from prizmo_commons import hplanck, echarge2, wpot, clight, amin, amax, pslope, rho_bulk, \
-    ev2erg, Zmin, Zmax, kboltzmann, pmass, emass, print_title, plotOn, refInd_file
+    ev2erg, Zmin, Zmax, kboltzmann, pmass, emass, print_title, plotOn, refInd_file, data_dir
 from bhmie import bhmie_qabs
 from tqdm import tqdm
 
@@ -62,11 +62,11 @@ def prepare_jpetot(user_energy, arange):
         out += "\n".join(["%d %.18e" % (Z, x) for x in jptot]) + "\n"
         out_heating += "\n".join(["%d %.18e" % (Z, x) for x in jptot_heating]) + "\n"
 
-    fh = open("../runtime_data/jptot.dat", "w")
+    fh = open(data_dir+"jptot.dat", "w")
     fh.write(out)
     fh.close()
 
-    fh = open("../runtime_data/jptot_heating.dat", "w")
+    fh = open(data_dir+"jptot_heating.dat", "w")
     fh.write(out_heating)
     fh.close()
 
@@ -86,11 +86,11 @@ def prepare_jion(trange, arange):
             jion_cool = get_jion_cooling(Z, Zpartner, mpartner, tgas, arange)
             out_cool += "%d %.18e %.18e\n" % (Z, tgas, jion_cool)
 
-    fh = open("../runtime_data/jion.dat", "w")
+    fh = open(data_dir+"jion.dat", "w")
     fh.write(out)
     fh.close()
 
-    fh = open("../runtime_data/jion_cooling.dat", "w")
+    fh = open(data_dir+"jion_cooling.dat", "w")
     fh.write(out_cool)
     fh.close()
 
@@ -105,11 +105,11 @@ def prepare_jion(trange, arange):
             jion_cool = get_jion_cooling(Z, Zpartner, mpartner, tgas, arange)
             out_cool += "%d %.18e %.18e\n" % (Z, tgas, jion_cool)
 
-    fh = open("../runtime_data/jelectron.dat", "w")
+    fh = open(data_dir+"jelectron.dat", "w")
     fh.write(out)
     fh.close()
 
-    fh = open("../runtime_data/jelectron_cooling.dat", "w")
+    fh = open(data_dir+"jelectron_cooling.dat", "w")
     fh.write(out_cool)
     fh.close()
 

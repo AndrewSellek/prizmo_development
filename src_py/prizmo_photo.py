@@ -107,7 +107,7 @@ def prepare(photo_limits, species):
             if not sp2idx(atom_ionized) in species:
                 maxdN = dN-1
                 continue
-            name_file = "%s__%s_E" % (atom, atom_ionized)
+            name_file = "%s__%s" % (atom, atom_ionized) + "_E"*dN
             print("Calculate Verner cross sections for ", name_file)
 
             erange_eV, xsecs = calc_crossSection_Verner(Z, Q, dN=dN, maxdN=maxdN)

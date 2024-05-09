@@ -215,8 +215,8 @@ def parse_prototype_rate(rate, prototype, prototype_vars, prototype_idxs, idx):
     cproto = prototype.lower()
 
     vs = []
-    for j in range(10):
-        vs += ["var%d_%02d" % (i, j) for i in range(10) if "var%d_%02d" % (i, j) in prototype]
+    for j in range(20):
+        vs += ["var%d_%02d" % (i, j) for i in range(5) if "var%d_%02d" % (i, j) in prototype]
 
     for v in vs:
         cproto = cproto.replace(v, "|")
@@ -226,6 +226,7 @@ def parse_prototype_rate(rate, prototype, prototype_vars, prototype_idxs, idx):
     for p in parts_p:
         crate = crate.replace(p, "|")
     parts_val = crate.split("|")
+    parts_val = [x for x in parts_val if x.strip() != ""]
 
     if prototype_vars is None:
         prototype_vars = {v: [] for v in vs}
@@ -400,14 +401,15 @@ def parse_krate(i, krate, verbatim, prototype):
         pre_dust = np.sqrt(8e0 * kboltzmann / np.pi) * (amax ** p3 - amin ** p3) / (amax ** p4 - amin ** p4) \
                    * p4 / p3 / (4. / 3. * rho_bulk)
         if is_dust_evaporation(verbatim):
-            k += "kall(%d) = nu_debye * exp(-%s / Tdust)\n\n" % (i, ("%.18e" % float(krate)).replace("e", "d"))
+            k += "kall(%d) = nu_debye * exp(-%s / Tdust)\n\n" % (i, ("%.18e" % float(krate))) #.replace("e", "d")
         elif is_dust_freezing(verbatim):
             sp = verbatim.split("->")[0]
             inv_sqrt_mass = 1e0 / np.sqrt(sp2mass(sp))
-            k += "kall(%d) = %.18e * rho_dust * sticking * sqrTgas * %.18e \n\n" % (i, pre_dust, inv_sqrt_mass)
-            k += "kall(%d) = %s * rho_dust * sticking * sqrTgas * %s \n\n" % (i, ("%.18e" % pre_dust).replace("e", "d"), ("%.18e" % inv_sqrt_mass).replace("e", "d"))
+            #k += "kall(%d) = %.18e * rho_dust * sticking * sqrTgas * %.18e \n\n" % (i, pre_dust, inv_sqrt_mass)
+            #k += "kall(%d) = %s * rho_dust * sticking * sqrTgas * %s \n\n" % (i, ("%.18e" % pre_dust), ("%.18e" % inv_sqrt_mass)) # .replace("e", "d")
+            k += "kall(%d) = %.18e * rho_dust * sticking * sqrTgas \n\n" % (i, inv_sqrt_mass*pre_dust)
         else:
-            sys.exit("ERRROR: dust reaction uknown " + verbatim)
+            sys.exit("ERROR: dust reaction uknown " + verbatim)
     else:
         k += "kall(%d) = %s\n\n" % (i, krate.replace("&", "&\n"))
 

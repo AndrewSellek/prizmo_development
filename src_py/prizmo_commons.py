@@ -175,7 +175,9 @@ def sp2mass(sp):
     mdict = {"H": 1*pmass,
              "He": 4*pmass,
              "C": 12*pmass,
-             "O": 16*pmass}
+             "O": 16*pmass,
+             "Ne": 20*pmass,
+             "Ar": 40*pmass}
     mass = 0e0
     for k, v in mdict.items():
         mass += count_X(sp, k) * v

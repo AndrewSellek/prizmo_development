@@ -19,7 +19,10 @@ def calc_crossSection_Verner(Z, Q, dN=1, maxdN=10, inner=True):
     #    linesOuterCount += Z
 
     # Shell identification
-    dataLine = int(Z*(Z-1)/2)+Q
+    dataFor = ["H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","S","Ar","Ca","Fe"]
+    dataLineOld = int(Z*(Z-1)/2)+Q
+    dataLine = np.sum([name2natom[el] for el in dataFor[:dataFor.index(natom2name[Z])]], dtype=int)+Q
+    print(dataLineOld, dataLine)
     ne = Z-Q
     shelle = [1,1,2,2,3,3,3,3,3,3,4,4,5,5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,7,7]  # Shell that nth electron occupies
     shellName = {1: '1s', 2: '2s', 3: '2p', 4: '3s', 5: '3p', 6: '3d', 7: '4s'}

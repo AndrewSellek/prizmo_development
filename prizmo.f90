@@ -35,7 +35,6 @@ contains
 
     gamma_ad = 7./5.
     d2g = 1d-2
-    fPAH = 1d-1
     ortho_to_para = 3. / 1.
     user_Av = 0d0
     radial_Ncol_H2 = 0d0  ! 1/cm2
@@ -311,15 +310,6 @@ contains
     d2g = val
 
   end subroutine prizmo_set_d2g
-
-  ! ****************************
-  subroutine prizmo_set_fPAH(val)
-    implicit none
-    real*8,intent(in)::val
-
-    fPAH = val
-
-  end subroutine prizmo_set_fPAH
 
   ! ****************************
   subroutine prizmo_set_crate(val)

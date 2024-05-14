@@ -90,10 +90,11 @@ contains
 
   ! ****************************
   function heating_photoelectric(x, tgas_in, jflux) result(heat)
+    use prizmo_utils
     implicit none
     real*8,intent(in)::x(nspecies), tgas_in, jflux(nphoto)
     real*8::heat
-    real*8::xx, y, eps, sigma, xe, tgas, xfuv
+    real*8::xx, y, eps, sigma, xe, tgas, xfuv, nH, epsPAH
 
     xe = min(max(x(idx_E), 1d-5), 1d5)
     tgas = min(max(tgas_in, 1d1), 1d4)
@@ -101,19 +102,33 @@ contains
 
     xx = sqrt(tgas) * xfuv / (xe + 1d-40)
 
-    if(xx <= 1d-4) then
-      y = 0.7
-    elseif(xx > 1d-4 .and. xx <= 1d0) then
-      y = 0.0171875*xx**3 + 0.103125*xx**2 + 0.15 !0.36
-    else
-      y = 0.15
-    endif
+    heat = 0d0
 
-    eps = 0.06 / (1d0 + 1.8d-3 * xx**.91) + y * (1d-4 * tgas)**1.2 / (1d0 + 1d-2 * xx)
+    ! DUST
+    if(d2g >= d2g_min) then
+        if(xx <= 1d-4) then
+          y = 0.7
+        elseif(xx > 1d-4 .and. xx <= 1d0) then
+          y = 0.0171875*xx**3 + 0.103125*xx**2 + 0.15 !0.36
+        else
+          y = 0.15
+        endif
 
-    sigma = kabs_integral * rho_dust
+        eps = 0.06 / (1d0 + 1.8d-3 * xx**.91) + y * (1d-4 * tgas)**1.2 / (1d0 + 1d-2 * xx)
 
-    heat = 2.5d-4 * sigma * eps * xfuv
+        sigma = kabs_integral * rho_dust
+
+        heat = heat + 2.5d-4 * sigma * eps * xfuv
+    end if
+
+    ! PAHs
+    if(fPAH > 0) then
+        epsPAH = 0.0487 / (1d0 + 4d-3 * xx**.73)
+        
+        nH = get_Hnuclei(x)
+        
+        heat = heat + fPAH * 1d-24 * nH * epsPAH * xfuv
+    end if
 
   end function heating_photoelectric
 

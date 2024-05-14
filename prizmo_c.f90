@@ -277,13 +277,13 @@ contains
 
   ! ****************************
   ! set PAH abundance (wrt ISM), default: 1e-1
-  subroutine prizmo_set_fPAH_c(val) bind(C)
+  subroutine prizmo_set_fpah_c(val) bind(C)
     implicit none
     real(C_DOUBLE),intent(in)::val
 
     call prizmo_set_fPAH(val)
 
-  end subroutine prizmo_set_fPAH_c
+  end subroutine prizmo_set_fpah_c
 
   ! ****************************
   ! set cosmic rays ionization rate, default 5e-17 1/s

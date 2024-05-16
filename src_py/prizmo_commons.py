@@ -27,10 +27,10 @@ wpot = 8e0 / erg2ev  # erg
 refInd_file = "../data/dust_refractive_index/silD03.txt"
 
 # chemical network file
-chemNet = "../networks/network_approx.dat"
+chemNet = "../networks/network_cleanVector.dat"
 
 # atomic data file
-atomData = "../data/atomic_cooling/krome_data.dat"
+atomData = "../data/atomic_cooling/krome_data_singleH2.dat"
 
 # number of photobins
 nphoto = 1000

@@ -97,7 +97,7 @@ real*8::delta_energy(nphoto-1)
 real*8::ode_atol(nspecies+1)
 real*8::ode_rtol(nspecies+1)
 
-real*8::gamma_ad, d2g, user_Av, user_cr, ortho_to_para, fPAH
+real*8::gamma_ad, d2g, user_Av, user_cr, ortho_to_para
 real*8::chi_FUV  ! habing flux in range 912-1100 AA
 real*8::rho_gas, rho_dust  ! gas and dust mass densities, g/cm3, do not change during integration
 

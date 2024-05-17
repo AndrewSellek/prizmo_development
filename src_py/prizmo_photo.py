@@ -3,10 +3,12 @@ from prizmo_commons import clight, hplanck, nphoto, kboltzmann, erg2ev, ev2erg, 
     fuv_energy1, fuv_energy2, radiation_type, data_dir
 from prizmo_preprocess import preprocess
 import numpy as np
+import os
 from glob import glob
 from scipy.interpolate import interp1d
 from scipy import integrate
 import sys
+import spectres
 
 # Calculates the cross-section according to Verner for outer and inner shells
 def calc_crossSection_Verner(Z, Q, dN=1, maxdN=10, inner=True):
@@ -105,19 +107,24 @@ def prepare(photo_limits, species):
 
     data_all = dict()
     # Leiden format
-    for fname in glob("../data/xsecs/*.dat"):
-        reactant_name = fname.split("/")[-1].split("__")[0]
-        if sp2idx(reactant_name) not in species:
-            continue
+    molXsecs  = glob("../data/xsecs/*.dat")
+    molreacts = [fname.split("/")[-1].split("__")[0] for fname in molXsecs]
+    def parse_Leiden(fname, data_all):
         header = [x for x in open(fname).read().split("\n") if x.strip().startswith("#")][-1]
         header = header.replace("#", "").split()
         data = np.loadtxt(fname).T
         data = {h: data[i][::-1] for i, h in enumerate(header)}
         data["energy"] = clight * hplanck / (data["wavelength"] * 1e-7)  # nm -> erg
         data["file"] = fname
-
-        name_file = fname.split("/")[-1].replace(".dat", "")
-        data_all[name_file] = data
+        if ".txt" in fname:
+            name_file = fname.split("/")[-1].replace(".txt", "")+'__{}+_E'.format(fname.split("/")[-1].replace(".txt", ""))
+            data_all[name_file] = data
+            name_file = "H2__H_H"
+            data_all[name_file] = data
+        else:
+            name_file = fname.split("/")[-1].replace(".dat", "")
+            data_all[name_file] = data
+        return data_all
 
     def get_plus(val):
         if val > 200:
@@ -128,44 +135,51 @@ def prepare(photo_limits, species):
 
     for idx in species:
         spec=idx2sp(idx)
-        if spec=='H2' and 'H2__H2+_E' in data_all.keys():
-            Eev = data_all['H2__H2+_E']['energy']*erg2ev
-            _, data_all['H2__H2+_E']['photoionisation'][(Eev>18)] = calc_crossSection_Yan(Eev[(Eev>18)])
-            Emax = np.max(Eev)
-            Eext, PIext = calc_crossSection_Yan()
-            Etot = np.append(Eext[(Eext>Emax)][::-1]*ev2erg,data_all['H2__H2+_E']['energy'])
-            PItot = np.append(PIext[(Eext>Emax)][::-1],data_all['H2__H2+_E']['photoionisation'])
-            PDtot = np.append(np.zeros_like(PIext[(Eext>Emax)][::-1]),data_all['H2__H2+_E']['photodissociation'])
-            data_all['H2__H2+_E']['energy'] = Etot
-            data_all['H2__H2+_E']['photoionisation'] = PItot
-            data_all['H2__H2+_E']['photodissociation'] = PDtot
-            continue
         if not spec.replace('+','') in natom2name.values():
-            continue
+            # This is a molecule
+            if os.path.exists("../data/xsecs/{}.txt".format(spec)):
+                data_all = parse_Leiden("../data/xsecs/{}.txt".format(spec), data_all)
+            elif spec in molreacts:
+                for mol, fname in zip(molreacts, molXsecs): 
+                    if mol==spec:
+                        data_all = parse_Leiden(fname, data_all)
+                
+            if spec=='H2' and 'H2__H2+_E' in data_all.keys():
+                Eev = data_all['H2__H2+_E']['energy']*erg2ev
+                _, data_all['H2__H2+_E']['photoionisation'][(Eev>18)] = calc_crossSection_Yan(Eev[(Eev>18)])
+                Emax = np.max(Eev)
+                Eext, PIext = calc_crossSection_Yan()
+                Etot = np.append(Eext[(Eext>Emax)][::-1]*ev2erg,data_all['H2__H2+_E']['energy'])
+                PItot = np.append(PIext[(Eext>Emax)][::-1],data_all['H2__H2+_E']['photoionisation'])
+                PDtot = np.append(np.zeros_like(PIext[(Eext>Emax)][::-1]),data_all['H2__H2+_E']['photodissociation'])
+                data_all['H2__H2+_E']['energy'] = Etot
+                data_all['H2__H2+_E']['photoionisation'] = PItot
+                data_all['H2__H2+_E']['photodissociation'] = PDtot
 
-        Z = name2natom[spec.replace('+','')]
-        Q = spec.count('+')
-        if Q>=Z:
-            continue
-        assert Q<Z, "Can't have charge >= atomic number, or ionization when charge == atomic number"
-        N = Z-Q
-
-        atom = natom2name[Z] + get_plus(Z - N)
-        assert atom==spec, "Identification of atoms in photoionisation not working"
-        maxdN=N
-        for dN in range(N,0,-1):
-            atom_ionized = natom2name[Z] + get_plus(Z - N + dN)
-            if not sp2idx(atom_ionized) in species:
-                maxdN = dN-1
+        if spec.replace('+','') in natom2name.values():
+            # This is an atom         
+            Z = name2natom[spec.replace('+','')]
+            Q = spec.count('+')
+            if Q>=Z:
                 continue
-            name_file = "%s__%s" % (atom, atom_ionized) + "_E"*dN
-            print("Calculate Verner cross sections for ", name_file)
+            assert Q<Z, "Can't have charge >= atomic number, or ionization when charge == atomic number"
+            N = Z-Q
+            atom = natom2name[Z] + get_plus(Z - N)
+            assert atom==spec, "Identification of atoms in photoionisation not working"
+            maxdN=N
+            for dN in range(N,0,-1):
+                atom_ionized = natom2name[Z] + get_plus(Z - N + dN)
+                if not sp2idx(atom_ionized) in species:
+                    maxdN = dN-1
+                    continue
+                name_file = "%s__%s" % (atom, atom_ionized) + "_E"*dN
+                print("Calculate Verner cross sections for ", name_file)
 
-            erange_eV, xsecs = calc_crossSection_Verner(Z, Q, dN=dN, maxdN=maxdN)
-            erange = erange_eV * ev2erg
-            data_all[name_file] = {"energy": erange,
-                                   "photoionisation": xsecs,
-                                   "file": name_file + ".dat"}
+                erange_eV, xsecs = calc_crossSection_Verner(Z, Q, dN=dN, maxdN=maxdN)
+                erange = erange_eV * ev2erg
+                data_all[name_file] = {"energy": erange,
+                                       "photoionisation": xsecs,
+                                       "file": name_file + ".dat"}
 
     energy = find_energy(data_all, photo_limits)
     save_xsecs(energy, data_all)
@@ -252,8 +266,14 @@ def save_xsecs(energy, data_all):
             what = "photoionisation"
         else:
             what = "photodissociation"
-        f = interp1d(np.log10(data["energy"]), np.log10(data[what] + 1e-80), bounds_error=False, fill_value=-80.)
-        xsecs = 1e1**f(np.log10(energy))
+
+        if what=="photodissociation" and 'wavelength' in data.keys():
+            wav = clight * hplanck / energy * 1e7
+            xsecs = spectres.spectres(wav[::-1], data['wavelength'][::-1], data[what][::-1] + 1e-80, fill=1e-80)[::-1]
+        else:
+            f = interp1d(np.log10(data["energy"]), np.log10(data[what] + 1e-80), bounds_error=False, fill_value=-80.)
+            xsecs = 1e1**f(np.log10(energy))
+
         np.savetxt(data_dir+"photo_xsecs_%s.dat" % file_name, xsecs)
 
 

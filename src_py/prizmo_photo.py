@@ -61,6 +61,43 @@ def calc_crossSection_Verner(Z, Q, dN=1, maxdN=10, inner=True):
 
     return E, sigma
 
+# Photoionization of H2
+def calc_branching_Chung(energy):
+    # Calculates fraction of H2 photoionization events resulting in dissociative ionization (i.e. H2 -> H+ + H + E)
+    E = [18.076, 18.1, 18.15, 18.2, 18.3, 18.4, 18.5, 18.6, 18.8, 19.0, 19.5, 20.0, 20.5, 21.0, 21.5, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0, 33.0, 34.0, 35.0, 35.5, 36.0, 36.5, 37.0, 37.5, 38.0, 39.0, 40.0, 41.0, 42.0, 43.0, 44.0, 45.0, 46.0, 48.0, 50.0, 52.0, 54.0, 56.0, 58.0, 60.0, 62.0, 64.0, 66.0, 68.0, 70.0, 72.0, 74.0, 76.0, 78.0, 80.0, 85.0, 90.0, 95.0, 100.0, 105.0, 110.0, 115.0, 120.0, 124]
+    branch = [0, 0.0022, 0.0046, 0.0063, 0.0086, 0.0102, 0.0115, 0.0128, 0.0148, 0.0164, 0.0190, 0.0200, 0.0206, 0.0212, 0.0216, 0.0220, 0.0228, 0.0235, 0.0242, 0.0252, 0.0275, 0.0333, 0.0410, 0.0508, 0.065, 0.081, 0.096, 0.110, 0.121, 0.123, 0.117, 0.105, 0.101, 0.100, 0.102, 0.112, 0.122, 0.132, 0.142, 0.149, 0.152, 0.155, 0.158, 0.169, 0.182, 0.195, 0.208, 0.222, 0.235, 0.247, 0.256, 0.264, 0.271, 0.277, 0.282, 0.284, 0.285, 0.284, 0.283, 0.282, 0.279, 0.276, 0.273, 0.271, 0.268, 0.265, 0.262, 0.260, 0.258]
+
+    interpor = interp1d(np.log10(E), np.log10(branch), fill_value=-np.inf, bounds_error=False)
+    return 1e1**interpor(np.log10(energy))
+
+def calc_crossSection_Yan(E=None, smooth=True, noLo=True):
+    # H2 photoionization cross-section (total) according to Yan et al. 1998
+    # Given in units of barn
+    barn = 1e-24
+
+    # Initialise energies
+    if E is None:
+        E = np.geomspace(15.4+2.6*noLo, energy_max*erg2ev, 1000)
+    x = E/15.4
+    
+    # Piecewise functions
+    def lo(x):
+        return 1e8   * (-37.895 + 99.723*x - 87.227*x**2 + 25.400*x**3)
+    def mi(E):
+        return 2e7   * (0.071 - 0.673/x + 1.977/x**2 - 0.692/x**3) * x**-0.252
+    hi = 45.57 * (1 - 2.003/x**0.5 - 4.806/x + 50.577/x**1.5 - 171.044/x**2 + 231.608/x**2.5 -81.885/x**3)/(E/1000)**3.5
+
+    # Construct cross-section
+    sigma = hi*(E>85)*barn
+    if smooth:
+        sigma += np.minimum(mi(x),hi)*(18<E)*(E<85)*barn
+    else:
+        sigma += mi(x)*(18<E)*(E<85)*barn
+    if not noLo:
+        sigma += lo(x)*(15.4<E)*(E<18)*barn        
+
+    return E, sigma
+
 # returns the energy bins in eV
 def prepare(photo_limits, species):
 
@@ -91,6 +128,18 @@ def prepare(photo_limits, species):
 
     for idx in species:
         spec=idx2sp(idx)
+        if spec=='H2' and 'H2__H2+_E' in data_all.keys():
+            Eev = data_all['H2__H2+_E']['energy']*erg2ev
+            _, data_all['H2__H2+_E']['photoionisation'][(Eev>18)] = calc_crossSection_Yan(Eev[(Eev>18)])
+            Emax = np.max(Eev)
+            Eext, PIext = calc_crossSection_Yan()
+            Etot = np.append(Eext[(Eext>Emax)][::-1]*ev2erg,data_all['H2__H2+_E']['energy'])
+            PItot = np.append(PIext[(Eext>Emax)][::-1],data_all['H2__H2+_E']['photoionisation'])
+            PDtot = np.append(np.zeros_like(PIext[(Eext>Emax)][::-1]),data_all['H2__H2+_E']['photodissociation'])
+            data_all['H2__H2+_E']['energy'] = Etot
+            data_all['H2__H2+_E']['photoionisation'] = PItot
+            data_all['H2__H2+_E']['photodissociation'] = PDtot
+            continue
         if not spec.replace('+','') in natom2name.values():
             continue
 

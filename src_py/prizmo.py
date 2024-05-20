@@ -4,6 +4,7 @@ import prizmo_cooling_atomic
 import prizmo_chemistry
 import prizmo_photoelectric
 import prizmo_dust_opacity
+import prizmo_PAH_opacity
 import prizmo_cooling_H2
 import prizmo_shielding
 import prizmo_cooling_CO
@@ -30,6 +31,7 @@ prizmo_cooling_atomic.prepare_atomic_cooling(species, H2_inc, fname=atomData)
 user_energy = prizmo_photo.prepare(photo_limits, species)
 
 prizmo_dust_opacity.prepare(user_energy)
+prizmo_PAH_opacity.prepare(user_energy)
 
 # prizmo_photoelectric.prepare(user_energy)
 

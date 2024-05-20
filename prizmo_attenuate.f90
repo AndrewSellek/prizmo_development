@@ -18,6 +18,9 @@ contains
     rhogas = get_rho(x)
     tau = tau + dust_kappa_opacity * rhogas * d2g
 
+    nH = get_Hnuclei(x)
+    tau = tau + PAH_sigma_opacity * nH * fPAH * 5.5e-5
+
     jflux = jflux * exp(-tau * ds)
 
   end subroutine

@@ -27,7 +27,7 @@ wpot = 8e0 / erg2ev  # erg
 refInd_file = "../data/dust_refractive_index/silD03.txt"
 
 # chemical network file
-chemNet = "../networks/network_cleanVector.dat"
+chemNet = "../networks/network_XrayMol.dat"
 
 # atomic data file
 atomData = "../data/atomic_cooling/krome_data_singleH2.dat"

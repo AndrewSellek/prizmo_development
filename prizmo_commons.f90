@@ -69,6 +69,9 @@ type(fit1d_data_vec(nv=cool_H2_vec, n1=cool_H2_nx))::cooling_H2data
 ! dust kabs table, cm2/g
 real*8::dust_kappa_opacity(nphoto)
 
+! PAH kabs table, cm2/C
+real*8::PAH_sigma_opacity(nphoto)
+
 ! shielding H2 tables
 integer,parameter::shielding_H2_n1=30, shielding_H2_n2=100
 type(fit2d_data(n1=shielding_H2_n1, n2=shielding_H2_n2))::shielding_H2_data
@@ -97,7 +100,7 @@ real*8::delta_energy(nphoto-1)
 real*8::ode_atol(nspecies+1)
 real*8::ode_rtol(nspecies+1)
 
-real*8::gamma_ad, d2g, user_Av, user_cr, ortho_to_para
+real*8::gamma_ad, d2g, user_Av, user_cr, ortho_to_para, fPAH, XCPAH
 real*8::chi_FUV  ! habing flux in range 912-1100 AA
 real*8::rho_gas, rho_dust  ! gas and dust mass densities, g/cm3, do not change during integration
 

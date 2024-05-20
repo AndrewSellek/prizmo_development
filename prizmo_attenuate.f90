@@ -8,7 +8,7 @@ contains
     implicit none
     real*8,intent(in)::x(nspecies), Tgas, ds
     real*8,intent(inout)::jflux(nphoto)
-    real*8::tau(nphoto), rhogas
+    real*8::tau(nphoto), rhogas, nH
 
     tau = 0d0
 
@@ -19,7 +19,7 @@ contains
     tau = tau + dust_kappa_opacity * rhogas * d2g
 
     nH = get_Hnuclei(x)
-    tau = tau + PAH_sigma_opacity * nH * fPAH * 5.5e-5
+    tau = tau + PAH_sigma_opacity * nH * fPAH * XCPAH
 
     jflux = jflux * exp(-tau * ds)
 

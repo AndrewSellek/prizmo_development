@@ -215,6 +215,21 @@ contains
 
   end subroutine load_dust_kappa_opacity
 
+  ! ****************************
+  subroutine load_PAH_sigma_opacity()
+    implicit none
+    integer::i, unit
+
+    print *, "loading PAH opacity..."
+
+    open(newunit=unit, file=trim(runtime_data_folder)//"sigma_PAH.dat", status="old")
+    do i=1,nphoto
+      read(unit, *) PAH_sigma_opacity(i)
+    end do
+    close(unit)
+
+  end subroutine load_PAH_sigma_opacity
+
   ! ***************************
   subroutine load_H2_cooling_tabs()
     implicit none

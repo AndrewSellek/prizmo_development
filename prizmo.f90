@@ -25,6 +25,7 @@ contains
     call load_dust_cooling_table()
     !call load_photoelectric_tables() ! NOTE: not used
     call load_dust_kappa_opacity()
+    call load_PAH_sigma_opacity()
     !! PREPROCESS_H2
     !! PREPROCESS_END
     !! PREPROCESS_CO
@@ -35,6 +36,8 @@ contains
 
     gamma_ad = 7./5.
     d2g = 1d-2
+    fPAH = 1d-1
+    XCPAH = 5d-5
     ortho_to_para = 3. / 1.
     user_Av = 0d0
     radial_Ncol_H2 = 0d0  ! 1/cm2
@@ -310,6 +313,15 @@ contains
     d2g = val
 
   end subroutine prizmo_set_d2g
+
+  ! ****************************
+  subroutine prizmo_set_fPAH(val)
+    implicit none
+    real*8,intent(in)::val
+
+    fPAH = val
+
+  end subroutine prizmo_set_fPAH
 
   ! ****************************
   subroutine prizmo_set_crate(val)

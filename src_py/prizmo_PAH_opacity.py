@@ -1,7 +1,7 @@
 import os.path
 import numpy as np
 import matplotlib.pyplot as plt
-from prizmo_commons import clight, hplanck, erg2ev, print_title, fuv_energy1, fuv_energy2, plotOn, data_dir
+from prizmo_commons import clight, hplanck, erg2ev, print_title, fuv_energy1, fuv_energy2, plotOn, data_dir, NCPAH
 from prizmo_preprocess import preprocess
 
 def Drude_profile(wav, wav_j, gamma_j, sigma_int_j):
@@ -31,7 +31,7 @@ def cutoff(wav, NC, charged=False):
     y = wav_c/wav
     return 1/np.pi*np.arctan(1e3*(y-1)**3/y)+0.5
 
-def prepare(user_energy, charged=False, NC=50):
+def prepare(user_energy, charged=False, NC=100):
     
     print_title("PAH opacity")
     fname = data_dir+"sigma_PAH.dat"
@@ -42,7 +42,7 @@ def prepare(user_energy, charged=False, NC=50):
     else:
         resonanceData = np.genfromtxt('../data/PAH_opacity/drude_parameters_DL07.dat', usecols=(0,1,2,3), names=True, dtype=(int,float,float,'U9'))
 
-    wav_um = hplanck*clight/user_energy * 1e6
+    wav_um = hplanck*clight/user_energy * 1e4
     sigma_PAH = np.zeros_like(user_energy)
 
     # wav_um<1/17.25 -> EUV/X-ray: behaves like graphite

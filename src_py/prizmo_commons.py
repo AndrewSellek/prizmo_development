@@ -25,6 +25,7 @@ pslope = -3.5  # MNR slope
 rho_bulk = 3.  # g/cm3
 wpot = 8e0 / erg2ev  # erg
 refInd_file = "../data/dust_refractive_index/silD03.txt"
+NCPAH = 100
 
 # chemical network file
 chemNet = "../networks/network_cleanVector.dat"
@@ -60,6 +61,7 @@ parser.add_argument("--nphoto", "-n", type=int, default=nphoto, help='Specify th
 parser.add_argument("--energy_minmax", "-E", type=float, nargs='+', default=[energy_min/ev2erg, energy_max/ev2erg], help='Specify the maximum and minimum energies (default: {})'.format([energy_min/ev2erg, energy_max/ev2erg]))
 parser.add_argument("--dust_minmax", "-d", type=float, nargs='+', default=[amin, amax], help='Specify the maximum and minimum dust grain sizes (default: {})'.format([amin,amax]))
 parser.add_argument("--refInd_file", "-e", type=str, default=refInd_file, help='Specify the refactory index file (default: {})'.format(refInd_file))
+parser.add_argument("--NCPAH", "-P", type=int, default=NCPAH, help='Specify the number of carbon atoms per PAH (default: {})'.format(NCPAH))
 parser.add_argument("--plot", "-p", action='store_true', help='Show plots produced by each stage')
 parser.add_argument("--append", "-A", type=str, default='', help='Append to the default runtime_data directory name')
 
@@ -73,6 +75,7 @@ energy_min = min(args.energy_minmax) * ev2erg
 energy_max = max(args.energy_minmax) * ev2erg
 amin = min(args.dust_minmax)
 amax = max(args.dust_minmax)
+NCPAH = args.NCPAH
 refInd_file = args.refInd_file
 plotOn = args.plot
 data_dir = "../runtime_data{}/".format(args.append)

@@ -13,7 +13,7 @@ import prizmo_heating_cooling
 import prizmo_main
 import numpy as np
 import warnings
-from prizmo_commons import init, idx2sp, chemNet, atomData, radiation_type, plotOn, erg2ev, args, data_dir
+from prizmo_commons import init, idx2sp, chemNet, atomData, radiation_type, plotOn, erg2ev, args, data_dir, NCPAH
 from prizmo_preprocess import preprocess
 
 np.seterr(divide="raise", over="raise", invalid="raise")
@@ -31,7 +31,7 @@ prizmo_cooling_atomic.prepare_atomic_cooling(species, H2_inc, fname=atomData)
 user_energy = prizmo_photo.prepare(photo_limits, species)
 
 prizmo_dust_opacity.prepare(user_energy)
-prizmo_PAH_opacity.prepare(user_energy)
+prizmo_PAH_opacity.prepare(user_energy, NC=NCPAH)
 
 # prizmo_photoelectric.prepare(user_energy)
 

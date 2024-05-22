@@ -398,16 +398,21 @@ def parse_krate(i, krate, verbatim, prototype):
     if "DUST" in verbatim:
         p3 = pslope + 3.
         p4 = pslope + 4.
-        pre_dust = np.sqrt(8e0 * kboltzmann / np.pi) * (amax ** p3 - amin ** p3) / (amax ** p4 - amin ** p4) \
-                   * p4 / p3 / (4. / 3. * rho_bulk)
+        pre_dust = (amax ** p3 - amin ** p3) / (amax ** p4 - amin ** p4) * p4 / p3 / (4. / 3. * rho_bulk)
+        """
         if is_dust_evaporation(verbatim):
+            print(verbatim, ",", krate, ",", prototype)
+            print("is dust evaporation")
             k += "kall(%d) = nu_debye * exp(-%s / Tdust)\n\n" % (i, ("%.18e" % float(krate))) #.replace("e", "d")
+        """
+        if is_dust_thermalDesorption(verbatim, prototype):
+            k += "kall(%d) = nu_debye * exp(-%s / Tdust)\n\n" % (i, ("%.18e" % float(krate))) #.replace("e", "d")
+        elif is_dust_photoDesorption(verbatim, prototype):
+            k += "kall(%d) = %.18e * rho_dust * chi_FUV\n\n" % (i, float(krate) * pre_dust * 1e8) #.replace("e", "d")
         elif is_dust_freezing(verbatim):
             sp = verbatim.split("->")[0]
             inv_sqrt_mass = 1e0 / np.sqrt(sp2mass(sp))
-            #k += "kall(%d) = %.18e * rho_dust * sticking * sqrTgas * %.18e \n\n" % (i, pre_dust, inv_sqrt_mass)
-            #k += "kall(%d) = %s * rho_dust * sticking * sqrTgas * %s \n\n" % (i, ("%.18e" % pre_dust), ("%.18e" % inv_sqrt_mass)) # .replace("e", "d")
-            k += "kall(%d) = %.18e * rho_dust * sticking * sqrTgas \n\n" % (i, inv_sqrt_mass*pre_dust)
+            k += "kall(%d) = %.18e * rho_dust * sticking * sqrTgas \n\n" % (i, np.sqrt(8e0 * kboltzmann / np.pi) * inv_sqrt_mass * pre_dust)
         else:
             sys.exit("ERROR: dust reaction uknown " + verbatim)
     else:
@@ -420,6 +425,13 @@ def is_dust_evaporation(verbatim):
     rv, pv = verbatim.split("->")
     return "DUST" in rv and "DUST" not in pv
 
+def is_dust_thermalDesorption(verbatim, prototype):
+    rv, pv = verbatim.split("->")
+    return ("DUST" in rv and "DUST" not in pv) and 'chi_fuv' not in prototype
+
+def is_dust_photoDesorption(verbatim, prototype):
+    rv, pv = verbatim.split("->")
+    return ("DUST" in rv and "DUST" not in pv) and 'chi_fuv' in prototype
 
 def is_dust_freezing(verbatim):
     rv, pv = verbatim.split("->")

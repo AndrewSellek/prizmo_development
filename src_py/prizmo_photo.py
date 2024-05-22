@@ -84,20 +84,27 @@ def calc_crossSection_Yan(E=None, smooth=True, noLo=True):
     x = E/15.4
     
     # Piecewise functions
-    def lo(x):
-        return 1e8   * (-37.895 + 99.723*x - 87.227*x**2 + 25.400*x**3)
-    def mi(E):
-        return 2e7   * (0.071 - 0.673/x + 1.977/x**2 - 0.692/x**3) * x**-0.252
-    hi = 45.57 * (1 - 2.003/x**0.5 - 4.806/x + 50.577/x**1.5 - 171.044/x**2 + 231.608/x**2.5 -81.885/x**3)/(E/1000)**3.5
+    # Wrong ones from Yan+1998
+    #lo = 1e8   * (-37.895 + 99.723*x - 87.227*x**2 + 25.400*x**3)                                                               # 15.4 -> 18
+    #mi = 2e7   * (0.071 - 0.673/x + 1.977/x**2 - 0.692/x**3) * x**-0.252                                                        # 18 -> 85
+    #hi = 45.57 * (1 - 2.003/x**0.5 - 4.806/x + 50.577/x**1.5 - 171.044/x**2 + 231.608/x**2.5 -81.885/x**3)/(E/1000)**3.5        # 85 ->
+    # Corrected ones from Yan+2001
+    lo = 1e7   * (1 - 197.448/x**0.5 + 438.823/x - 260.481/x**1.5 + 17.915/x**2)                                            # 15.4 -> 18
+    m1 =         (-145.528 + 351.394*x**0.5 - 274.294*x + 74.320*x**1.5)/(E/1000)**3.5                                      # 18 -> 30
+    m2 =         (65.304 - 91.762*x**0.5 + 51.778*x - 9.364*x**1.5)/(E/1000)**3.5                                           # 30 -> 85
+    hi = 45.57 * (1 - 2.003/x**0.5 - 4.806/x + 50.577/x**1.5 - 171.044/x**2 + 231.608/x**2.5 -81.885/x**3)/(E/1000)**3.5    # 85 ->
 
     # Construct cross-section
-    sigma = hi*(E>85)*barn
-    if smooth:
-        sigma += np.minimum(mi(x),hi)*(18<E)*(E<85)*barn
-    else:
-        sigma += mi(x)*(18<E)*(E<85)*barn
+    # Wrong
+    #sigma = hi*(E>85)*barn
+    #if smooth:
+    #    sigma += np.minimum(mi,hi)*(18<E)*(E<85)*barn
+    #else:
+    #    sigma += mi*(18<E)*(E<85)*barn
+    # Corrected
+    sigma = hi*(E>=85)*barn + m2*(E>=30)*(E<85)*barn + m1*(E>=18)*(E<30)*barn
     if not noLo:
-        sigma += lo(x)*(15.4<E)*(E<18)*barn        
+        sigma += lo*(15.4<E)*(E<18)*barn        
 
     return E, sigma
 

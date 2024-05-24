@@ -28,7 +28,7 @@ refInd_file = "../data/dust_refractive_index/silD03.txt"
 NCPAH = 100
 
 # chemical network file
-chemNet = "../networks/network_XrayMol.dat"
+chemNet = "../networks/network_photodesorb.dat"
 
 # atomic data file
 atomData = "../data/atomic_cooling/krome_data_singleH2.dat"

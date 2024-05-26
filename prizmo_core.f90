@@ -17,10 +17,11 @@ contains
     rho_gas = get_rho(x)
     rho_dust = rho_gas * d2g
 
-    call compute_photorates(x, Tgas,  jflux)
-    call compute_photorates_heating(x, Tgas, jflux)
+    call compute_photorates(jflux, Tgas)
+    call compute_photorates_heating(jflux)
     call compute_Eabsorption(jflux)
     call compute_photoelectric_terms(jflux)
+    call compute_secondary_loss(x)
 
   end subroutine init
 
@@ -145,10 +146,10 @@ contains
 
       ! store data at each large-step to check solution if maxstep is reached
       tgas = y(idx_tgas)
-      flux(:) = get_flux(y(1:nspecies), Tgas, Tdust)
       x_steps(:, i) = y(1:nspecies)
       tgas_steps(i) = y(idx_tgas)
       heat_steps(:, i) = heating_array(y(1:nspecies), Tgas, Tdust, jflux)
+      flux(:) = get_flux(y(1:nspecies), Tgas, Tdust)
       cool_steps(:, i) = cooling_array(y(1:nspecies), Tgas, Tdust, jflux, flux)
       dy_steps(:, i) = get_fex(y(1:nspecies), Tgas)
 

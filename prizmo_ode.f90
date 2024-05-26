@@ -24,6 +24,7 @@ contains
     log_ngas = log10(ntot)
     Tdust = get_tdust(log_Tgas, log_ngas)
 
+    heat = heating(y(1:nspecies), Tgas, Tdust, jflux) ! Need this to calculate the secondary electron ionisations
     flux(:) = get_flux(y(1:nspecies), Tgas, Tdust)
 
     if(minval(kall) < 0d0) then
@@ -39,7 +40,6 @@ contains
     end if
 
     if(solve_thermo) then
-      heat = heating(y(1:nspecies), Tgas, Tdust, jflux)
       cool = cooling(y(1:nspecies), Tgas, Tdust, jflux, flux)
 
       dy(idx_Tgas) = (gamma_ad - 1d0) * (heat - cool) / kboltzmann / ntot

@@ -115,6 +115,8 @@ contains
 
     rel_error = 1d-3
 
+    call init(x, Tgas, jflux)
+
     Tdust = prizmo_get_tdust(x, Tgas, jflux)
     cools = prizmo_get_cooling_array(x, Tgas, Tdust, jflux)
     heats = prizmo_get_heating_array(x, Tgas, Tdust, jflux)
@@ -267,6 +269,8 @@ contains
     tmin = log10(1d0)
     tmax = log10(1d5)
 
+    call init(x, Tgas, jflux)
+
     open(newunit=unit, file=trim(fname), status="replace")
       do i=1, ntemp
         tgas = 1d1**((i - 1) * (tmax - tmin) / (ntemp - 1) + tmin)
@@ -368,7 +372,7 @@ contains
     real*8::k(nreactions)
 
     call compute_rates(x, Tgas, Tdust)
-    call compute_photorates(x, Tgas, jflux)
+    call compute_photorates(jflux, Tgas)
 
     k = kall
 
@@ -420,7 +424,7 @@ contains
     Tdust = prizmo_get_tdust(x, Tgas, jflux)
 
     call compute_rates(x, Tgas, Tdust)
-    call compute_photorates(x, Tgas, jflux)
+    call compute_photorates(jflux, Tgas)
 
     fluxes = get_flux(x, Tgas, Tdust)
 

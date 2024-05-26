@@ -4,9 +4,9 @@ module prizmo_rates_photo
 contains
 
   ! ************************
-  subroutine compute_photorates(x, Tgas, jflux)
+  subroutine compute_photorates(jflux, Tgas)
     implicit none
-    real*8,intent(in)::x(nspecies), Tgas, jflux(nphoto)
+    real*8,intent(in)::jflux(nphoto), Tgas
     real*8::f(nphoto), log_tgas, log_NH2, log_NCO, kernel(nphoto)
 
     log_tgas = log10(Tgas)

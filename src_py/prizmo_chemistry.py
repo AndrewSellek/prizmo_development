@@ -144,7 +144,7 @@ def prepare(fname="../networks/test.dat", main=False, speciesList=None):
 
     if not main:
         preprocess("../prizmo_ode.f90", {"ODE": ode})
-        preprocess("../prizmo_rates.f90", {"RATES": krates.replace("e", "d").replace("Hd", "He").replace("dxp", "exp").replace("usdr", "user").replace("ddbyd", "debye").replace("*invTgas","d0*invTgas"),
+        preprocess("../prizmo_rates.f90", {"RATES": krates.replace("e", "d").replace("Hd", "He").replace("dxp", "exp").replace("usdr", "user").replace("ddbyd", "debye").replace("sdcond", "second").replace("iond_h", "ione_h").replace("*invTgas","d0*invTgas"),
                                            "PROTOTYPES": prototype_pragma,
                                            "PROTOTYPES_DEFINE": prototype_define})
         preprocess("../prizmo_rates_photo.f90", {"PHOTORATES": krates_photo})

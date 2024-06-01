@@ -11,7 +11,7 @@ contains
     real*8::Tgas32, Tgas14, invTgas, invTgas32, sqrTgas, sqrTgas32
     real*8::Tgas32_m06, Tgas32_m05, Tgas32_m04, Tgas32_m03, invTgas14_065
     real*8::sticking, nu_debye
-    real*8::n_H, n_H2, ione_H, ione_H2
+    !real*8::n_H, n_H2, ione_H, ione_H2
 
     !! PREPROCESS_PROTOTYPES_DEFINE
     !! PREPROCESS_END
@@ -34,10 +34,10 @@ contains
     nu_debye = 1d12  ! 1/s
 
     ! secondary ionisation
-    n_H = x(idx_H)
-    n_H2 = x(idx_H2)
-    ione_H = 13.60*ev2erg
-    ione_H2 = 15.12*ev2erg
+    !n_H = x(idx_H)
+    !n_H2 = x(idx_H2)
+    !ione_H = 13.60*ev2erg
+    !ione_H2 = 15.12*ev2erg
 
     !! PREPROCESS_PROTOTYPES
     !! PREPROCESS_END

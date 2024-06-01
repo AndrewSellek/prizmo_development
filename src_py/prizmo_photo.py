@@ -1,6 +1,6 @@
 from prizmo_commons import clight, hplanck, nphoto, kboltzmann, erg2ev, ev2erg, \
     hplanck_eV, energy_min, energy_max, print_title, photo_logspacing, natom2name, name2natom, sp2idx, idx2sp, \
-    fuv_energy1, fuv_energy2, radiation_type, data_dir, count_X
+    fuv_energy1, fuv_energy2, radiation_type, BB_params, data_dir, count_X
 from prizmo_preprocess import preprocess
 import numpy as np
 import os
@@ -245,7 +245,6 @@ def prepare(photo_limits, species):
         spectrum = radiation_type.split("@")[0]
         luminosity = radiation_type.split("@")[1]
         band_lo, band_hi = radiation_type.split("@")[2].split("-")
-        addBB = not "noBB" in radiation_type
         if "@Lacc" in radiation_type:
             Lacc = float(radiation_type.split("@")[3][4:])
         else:
@@ -255,7 +254,7 @@ def prepare(photo_limits, species):
             fluxUnits='photon'
         else:
             fluxUnits='energy'
-        prepare_external_spec(energy, spectrum, L_X=float(luminosity), X_lo=float(band_lo), X_hi=float(band_hi), add_BB=addBB, Lacc=Lacc, fluxUnits=fluxUnits)
+        prepare_external_spec(energy, spectrum, L_X=float(luminosity), X_lo=float(band_lo), X_hi=float(band_hi), add_BB=BB_params, Lacc=Lacc, fluxUnits=fluxUnits)
     else:
         sys.exit("ERROR: unknown radiation type %s" % radiation_type)
     compute_habing_flux(energy)
@@ -353,7 +352,19 @@ def prepare_xdr(energy):
     np.savetxt(data_dir+"radiation_field.dat", 1e1**fxdr(np.log10(energy)))
 
 
-def prepare_external_spec(energy, spectrum, L_X=1e30, X_lo=1e2, X_hi=1e4, rstar=6.957e10, add_BB=False, Lacc=None, fluxUnits='energy'):
+def prepare_external_spec(energy, spectrum, L_X=1e30, X_lo=1e2, X_hi=1e4, rstar=6.957e10, add_BB="None", Lacc=None, fluxUnits='energy'):
+    if add_BB!="None" and "R" in add_BB:
+        Tstar = float(add_BB.split("_")[0][4:])
+        rstar *= float(add_BB.split("R")[1])
+    elif add_BB!="None" and "M" in add_BB:
+        Mstar = float(add_BB.split("_")[0][1:])
+        tstar = float(add_BB.split("_")[1][:-3])*1e6
+        Tstar, rs = lookup_from_tracks(Mstar, tstar)
+        rstar *= rs
+    elif add_BB!="None":
+        raise NotImplementedError("Format of BB_params not recognised")
+    print("Using rstar = {} cm = {} Rsun".format(rstar, rstar/6.957e10))
+
     if fluxUnits=='energy':
         ## Assume MOCASSIN-style spectrum where columns are lambda and F_lambda
         # Import
@@ -400,15 +411,24 @@ def prepare_external_spec(energy, spectrum, L_X=1e30, X_lo=1e2, X_hi=1e4, rstar=
         raise NotImplementedError("Spectrum units not recognised: should either be in erg/s/A(/cm^2/sr) or photon/s/keV(/cm^2)")
 
     # Add stellar blackbody
-    if add_BB:
-        bfield += fplanck(energy, 5000.)
+    if add_BB!="None":
+        bfield += fplanck(energy, Tstar)
     # Add accretion blackbody
     if Lacc:
         TFUV = 12000
-        ffill = Lacc * (TFUV/5780)**-4 * (rstar/6.957e10)**-2
+        ffill = Lacc * (TFUV/Tstar)**-4 * (rstar/6.957e10)**-2
         bfield += ffill * fplanck(energy, TFUV)
 
     np.savetxt(data_dir+"radiation_field.dat", bfield)
+
+def lookup_from_tracks(Mstar, tstar):
+    B15 = np.genfromtxt('../data/spectra/BHAC15_tracks+structure.txt', comments='!', names=True, skip_header=1, usecols=(0,1,2,3,5))
+
+    interpolator_T = interp1d(B15['logtyr'][(B15['MMs']==Mstar)], B15['Teff'][(B15['MMs']==Mstar)], bounds_error=False)
+    interpolator_R = interp1d(B15['logtyr'][(B15['MMs']==Mstar)], B15['RRs'][(B15['MMs']==Mstar)],  bounds_error=False)
+
+    print("Baraffe et al. 2015: {} Msun @ {} Myr -> Teff = {}, R = {} Rsun".format(Mstar, tstar/1e6, interpolator_T(np.log10(tstar)), interpolator_R(np.log10(tstar))))
+    return interpolator_T(np.log10(tstar)), interpolator_R(np.log10(tstar))
 
 
 def compute_habing_flux(energy):

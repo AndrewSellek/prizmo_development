@@ -46,10 +46,10 @@ photo_logspacing = True
 # radiation types are, "draine", "xdr", "BB@Tbb", "file@[LX]@[X_lo-X_hi]",
 ## xdr loads radiation from data/spectra/xdr_spectrum.dat
 ## for a specified, file...
-### add noBB to not include an additional 5000K photospheric blackbody
 ### add @LFUV[LFUV] to additionally include a 12000K accretion blackbody
 ## file columns are: eV, eV/cm2/Hz/s
 radiation_type = "baspec_lx30.dat@2.04e30@5e2-5e3"
+BB_params = "Teff5000_R1" # "M1_1Myr"
 
 # Get command line overwrites
 parser = argparse.ArgumentParser()
@@ -57,6 +57,7 @@ parser.add_argument("--input", "-i", type=str, default=None, help='Specify input
 parser.add_argument("--chemNet", "-c", type=str, default=chemNet, help='Specify the chemical network (default: {})'.format(chemNet))
 parser.add_argument("--atomData", "-a", type=str, default=atomData, help='Specify the atomic data file (default: {})'.format(atomData))
 parser.add_argument("--radiation_type", "-r", type=str, default=radiation_type, help='Specify the radiation type (default: {})'.format(radiation_type))
+parser.add_argument("--BB_params", "-B", type=str, default=BB_params, help='Specify the parameters of the photospheric black body (default: {})'.format(BB_params))
 parser.add_argument("--nphoto", "-n", type=int, default=nphoto, help='Specify the number of photobins (default: {})'.format(nphoto))
 parser.add_argument("--energy_minmax", "-E", type=float, nargs='+', default=[energy_min/ev2erg, energy_max/ev2erg], help='Specify the maximum and minimum energies (default: {})'.format([energy_min/ev2erg, energy_max/ev2erg]))
 parser.add_argument("--dust_minmax", "-d", type=float, nargs='+', default=[amin, amax], help='Specify the maximum and minimum dust grain sizes (default: {})'.format([amin,amax]))
@@ -70,6 +71,7 @@ input_file = args.input
 chemNet = args.chemNet
 atomData = args.atomData
 radiation_type = args.radiation_type
+BB_params = args.BB_params
 nphoto = args.nphoto
 energy_min = min(args.energy_minmax) * ev2erg
 energy_max = max(args.energy_minmax) * ev2erg

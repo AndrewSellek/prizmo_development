@@ -165,9 +165,9 @@ level: 1, 91.211, 4, 2P1.5
 Es, 1, 0, (1.55+1.25*T4)/(1+0.35*T4**1.25)
 # Draine Book (2011), Tab.F6
 H, 1, 0, 7.58e-10*T2**(0.128+0.009*log(T2))
-#H2pa, 1, 0, 4.25e-10*T2**(0.124-0.018*log(T2))
 #H2or, 1, 0, 5.14e-10*T2**(0.095+0.023*log(T2))
-H2, 1, 0, 0.75*4.25e-10*T2**(0.124-0.018*log(T2))+0.25*5.14e-10*T2**(0.095+0.023*log(T2))
+#H2pa, 1, 0, 4.25e-10*T2**(0.124-0.018*log(T2))
+H2, 1, 0, 0.75*5.14e-10*T2**(0.095+0.023*log(T2))+0.25*4.25e-10*T2**(0.124-0.018*log(T2))
 
 # Collisional excitation for electrons involving levels 2, 3 & 4 could be taken from https://ui.adsabs.harvard.edu/abs/1992ApJS...80..425B/abstract but would need fitting as tabulated at different T
 

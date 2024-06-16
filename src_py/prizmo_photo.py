@@ -416,7 +416,9 @@ def prepare_external_spec(energy, spectrum, L_X=1e30, X_lo=1e2, X_hi=1e4, rstar=
     # Add accretion blackbody
     if Lacc:
         TFUV = 12000
-        ffill = Lacc * (TFUV/Tstar)**-4 * (rstar/6.957e10)**-2
+        Lstar = 4*np.pi*rstar**2*Tstar**4*5.670e-5/3.846e33
+        print("Normalise Lacc to Lstar = {:.2f} Lsun".format(Lstar))
+        ffill = Lacc/Lstar * (TFUV/Tstar)**-4
         bfield += ffill * fplanck(energy, TFUV)
 
     np.savetxt(data_dir+"radiation_field.dat", bfield)

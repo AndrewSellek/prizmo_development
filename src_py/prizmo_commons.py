@@ -28,7 +28,7 @@ refInd_file = "../data/dust_refractive_index/silD03.txt"
 NCPAH = 100
 
 # chemical network file
-chemNet = "../networks/network_v2final.dat"
+chemNet = "../networks/network_v2_withChex.dat"
 
 # atomic data file
 atomData = "../data/atomic_cooling/krome_data_singleH2.dat"
@@ -176,6 +176,12 @@ def idx2mass(idx):
 def sp2mass(sp):
     if sp == "E":
         return emass
+    if sp in ["R","T","X","Y","Z"]:
+        # Dummy elements to use with null reactions as pure tracers of advection
+        # Assumed unit mass and should be set to very low abundance
+        # Can be included using a reaction e.g. R -> R with rate = 0
+        # See network_radiusTracers.dat for examples
+        return pmass
 
     mdict = {"H": 1*pmass,
              "He": 4*pmass,

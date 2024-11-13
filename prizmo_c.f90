@@ -317,4 +317,20 @@ contains
 
   end subroutine prizmo_get_chi_FUV_c
 
+  ! ****************************
+  ! X-ray phtoionization loss terms
+  subroutine prizmo_get_fLoss_c(x, fLoss) bind(C)
+    use prizmo_commons
+    implicit none
+    real(C_DOUBLE),intent(in)::x(nspecies)
+    real(C_DOUBLE),intent(out)::fLoss(2)
+
+    print *, "USERVAR: retrieve fLoss"
+
+    fLoss = prizmo_get_fLoss(x)
+
+    print *, "USERVAR: return fLoss array 2/2"
+
+  end subroutine prizmo_get_fLoss_c
+
 end module prizmo_c

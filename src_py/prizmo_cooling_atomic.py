@@ -36,9 +36,9 @@ def prepare_atomic_cooling_levels(H2_inc, fname="../data/atomic_cooling/krome_da
 
     commons += "real*8,parameter::natomic_cools=%d\n" % (icount + 1)
 
-    preprocess("../prizmo_loaders.f90", {"LOAD_ATOMIC_COOLING": loaders})
-    preprocess("../prizmo_commons.f90", {"ATOMIC_COOLING_COMMONS": commons})
-    preprocess("../prizmo_cooling_atomic.f90", {"ATOMIC_COOLING_FUNCTIONS": funcs,
+    preprocess("prizmo_loaders.f90", {"LOAD_ATOMIC_COOLING": loaders})
+    preprocess("prizmo_commons.f90", {"ATOMIC_COOLING_COMMONS": commons})
+    preprocess("prizmo_cooling_atomic.f90", {"ATOMIC_COOLING_FUNCTIONS": funcs,
                                                 "ATOMIC_COOLING": cool_tot,
                                                 "ATOMIC_COOLING_ARRAY": cool_arr})
 
@@ -102,9 +102,9 @@ def prepare_atomic_cooling_tables(species_indexes):
         nv = [len(x) for x in colliders].count(d-1)
         number_of_atomic_coolants += "integer,parameter::atomic_cooling_nvec%dd=%d\n" % (d, nv)
 
-    preprocess("../prizmo_commons.f90", {"ATOMIC_COOLING_NVEC": number_of_atomic_coolants})
-    preprocess("../prizmo_cooling_atomic.f90", {"ATOMIC_COOLING": atomic_cooling})
-    preprocess("../prizmo_loaders.f90", {"LOAD_ATOMIC_COOLING": atomic_cooling_loader_str})
+    preprocess("prizmo_commons.f90", {"ATOMIC_COOLING_NVEC": number_of_atomic_coolants})
+    preprocess("prizmo_cooling_atomic.f90", {"ATOMIC_COOLING": atomic_cooling})
+    preprocess("prizmo_loaders.f90", {"LOAD_ATOMIC_COOLING": atomic_cooling_loader_str})
 
     colors = ["r", "g", "b", "tab:orange"]
     lss = ["-", ":", "--", "-."]

@@ -13,13 +13,13 @@ import prizmo_heating_cooling
 import prizmo_main
 import numpy as np
 import warnings
-from prizmo_commons import init, idx2sp, chemNet, atomData, radiation_type, plotOn, erg2ev, args, data_dir, NCPAH
+from prizmo_commons import init, idx2sp, chemNet, atomData, radiation_type, plotOn, erg2ev, args, data_dir, f90_dir, NCPAH
 from prizmo_preprocess import preprocess
 
 np.seterr(divide="raise", over="raise", invalid="raise")
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-init(data_dir)
+init(data_dir, f90_dir)
 
 species, photo_limits = prizmo_chemistry.prepare(fname=chemNet)
 species_names = [idx2sp(x) for x in species]
@@ -40,14 +40,14 @@ prizmo_tdust.prepare(user_energy)
 prizmo_shielding.prepare(H2_inc, CO_inc)
 if H2_inc:
     prizmo_cooling_H2.prepare()
-    preprocess("../prizmo.f90", {"H2": "call load_H2_cooling_tabs()\ncall load_shielding_H2_table()"})
+    preprocess("prizmo.f90", {"H2": "call load_H2_cooling_tabs()\ncall load_shielding_H2_table()"})
 else:
-    preprocess("../prizmo.f90", {"H2": ""})
+    preprocess("prizmo.f90", {"H2": ""})
 if CO_inc:
     prizmo_cooling_CO.prepare()
-    preprocess("../prizmo.f90", {"CO": "call load_CO_cooling()\ncall load_shielding_CO_table()"})
+    preprocess("prizmo.f90", {"CO": "call load_CO_cooling()\ncall load_shielding_CO_table()"})
 else:
-    preprocess("../prizmo.f90", {"CO": ""})
+    preprocess("prizmo.f90", {"CO": ""})
 
 prizmo_heating_CR.prepare(H2_inc)
 

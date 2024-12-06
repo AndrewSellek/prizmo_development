@@ -70,6 +70,6 @@ def compute_kabs_integral(energy, fk):
     kabs_integral = "! kabs integral in FUV range\n"
     kabs_integral += "real*8,parameter::kabs_integral=%s" % ("%.18e" % kappaint).replace("e", "d")
 
-    preprocess("../prizmo_commons.f90", {"KABS_INTEGRAL": kabs_integral})
+    preprocess("prizmo_commons.f90", {"KABS_INTEGRAL": kabs_integral})
 
     return kappaint

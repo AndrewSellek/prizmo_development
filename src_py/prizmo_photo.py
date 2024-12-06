@@ -449,5 +449,5 @@ def compute_habing_flux(energy):
     rconst += "integer,parameter::fuv_idx2=%d\n" % idx2
     rconst += "real*8,parameter::habing_flux=%s\n" % ("%.18e" % hf).replace("e", "d")
 
-    preprocess("../prizmo_commons.f90", {"RADIATION_CONSTANTS": rconst})
+    preprocess("prizmo_commons.f90", {"RADIATION_CONSTANTS": rconst})
     print("Habing flux:", hf, idx1, idx2)

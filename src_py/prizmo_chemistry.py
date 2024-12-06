@@ -143,25 +143,25 @@ def prepare(fname="../networks/test.dat", main=False, speciesList=None):
         indexes += "integer,parameter::prizmo_%s=%s\n" % (sp, sp)
 
     if not main:
-        preprocess("../prizmo_ode.f90", {"ODE": ode})
-        preprocess("../prizmo_rates.f90", {"RATES": krates.replace("e", "d").replace("Hd", "He").replace("dxp", "exp").replace("usdr", "user").replace("ddbyd", "debye").replace("sdcond", "second").replace("iond_", "ione_").replace("*invTgas","d0*invTgas"),
+        preprocess("prizmo_ode.f90", {"ODE": ode})
+        preprocess("prizmo_rates.f90", {"RATES": krates.replace("e", "d").replace("Hd", "He").replace("dxp", "exp").replace("usdr", "user").replace("ddbyd", "debye").replace("sdcond", "second").replace("iond_", "ione_").replace("*invTgas","d0*invTgas"),
                                            "PROTOTYPES": prototype_pragma,
                                            "PROTOTYPES_DEFINE": prototype_define})
-        preprocess("../prizmo_rates_photo.f90", {"PHOTORATES": krates_photo})
-        preprocess("../prizmo_rates_heating.f90", {"PHOTOHEATING_RATE": photoheating_rate})
-        preprocess("../prizmo_heating_photo.f90", {"PHOTOHEATING": photoheating})
-        preprocess("../prizmo_heating_H2diss.f90", {"H2DISS": H2diss})
-        preprocess("../prizmo_cooling_chemical.f90", {"RECOMBINATION": recombination_cooling,
+        preprocess("prizmo_rates_photo.f90", {"PHOTORATES": krates_photo})
+        preprocess("prizmo_rates_heating.f90", {"PHOTOHEATING_RATE": photoheating_rate})
+        preprocess("prizmo_heating_photo.f90", {"PHOTOHEATING": photoheating})
+        preprocess("prizmo_heating_H2diss.f90", {"H2DISS": H2diss})
+        preprocess("prizmo_cooling_chemical.f90", {"RECOMBINATION": recombination_cooling,
                                                       "CHEMICAL": chemical_cooling})
-        preprocess("../prizmo_loaders.f90", {"LOAD_XSECS": load_xsecs})
-        preprocess("../prizmo_flux.f90", {"FLUXES": fluxes})
-        preprocess("../prizmo_attenuate.f90", {"ATTENUATE": attenuate})
-        preprocess("../prizmo_commons.f90", {"COMMON_VARS": common_vars,
+        preprocess("prizmo_loaders.f90", {"LOAD_XSECS": load_xsecs})
+        preprocess("prizmo_flux.f90", {"FLUXES": fluxes})
+        preprocess("prizmo_attenuate.f90", {"ATTENUATE": attenuate})
+        preprocess("prizmo_commons.f90", {"COMMON_VARS": common_vars,
                                              "MASSES": masses})
-        preprocess("../prizmo_utils.f90", {"ELECTRONS": electron_sum,
+        preprocess("prizmo_utils.f90", {"ELECTRONS": electron_sum,
                                            "GET_RHO": get_rho})
-        preprocess("../prizmo_utils.f90", xnuclei_pragma)
-        preprocess("../prizmo.f90", {"INDEXES": indexes})
+        preprocess("prizmo_utils.f90", xnuclei_pragma)
+        preprocess("prizmo.f90", {"INDEXES": indexes})
 
         open(data_dir+"energy_thresholds.dat", "w").write(photo_thresholds)
 

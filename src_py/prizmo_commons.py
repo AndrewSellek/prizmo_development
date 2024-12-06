@@ -81,6 +81,7 @@ NCPAH = args.NCPAH
 refInd_file = args.refInd_file
 plotOn = args.plot
 data_dir = "../runtime_data{}/".format(args.append)
+f90_dir = "../f90{}/".format(args.append)
 
 def parse_input_file(fname):
     opts = dict()
@@ -145,10 +146,13 @@ name2natom = {el: Z for Z, el in natom2name.items()}
 
 ### Useful Functions
 
-def init(dirName = "../runtime_data/"):
+def init(dirName_data = "../runtime_data/", dirName_f90 = "../f90"):
     import os
-    if not os.path.exists(dirName):
-        os.makedirs(dirName)
+    import shutil
+    if not os.path.exists(dirName_data):
+        os.makedirs(dirName_data)
+    if not os.path.exists(dirName_f90):
+        shutil.copytree('../src_f90',dirName_f90)
 
 
 def sp2spj(sp):

@@ -1,6 +1,8 @@
-
+from prizmo_commons import f90_dir
 
 def preprocess(fname, dictionary):
+
+    fname = f90_dir + fname
 
     in_pragma = False
     fh = open(fname)

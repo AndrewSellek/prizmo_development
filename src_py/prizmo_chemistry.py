@@ -375,9 +375,15 @@ def parse_photoheating(i, krate, rr, verbatim):
 
     if verbatim.strip() == "H2 -> H + H":
         return "\n"
-
-    heat += "heat = heat + kall_heat(%d) * x(%s)\n" % (i, rr[0])
-    return heat
+        
+    if '+ E' in verbatim:
+        #secondIon = "! %s\n" % verbatim
+        heat += "heat = heat + kall_heat(%d) * x(%s) * max(1d0-fLoss_ion-fLoss_rad, 0d0)\n" % (i, rr[0])
+        heat += "secondIon = secondIon + kall_heat(%d) * x(%s) * fLoss_ion / (x(idx_H)*13.60*ev2erg+1.3*x(idx_H2)*15.12*ev2erg)\n" % (i, rr[0])
+    else:
+        heat += "heat = heat + kall_heat(%d) * x(%s)\n" % (i, rr[0])
+        
+    return heat #, secondIon
 
 
 def parse_H2diss(i, krate, verbatim):

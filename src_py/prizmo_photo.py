@@ -353,6 +353,7 @@ def prepare_xdr(energy):
 
 
 def prepare_external_spec(energy, spectrum, L_X=1e30, X_lo=1e2, X_hi=1e4, rstar=6.957e10, add_BB="None", Lacc=None, fluxUnits='energy'):
+    BBfudge = 1.0 # BBfudge allows for e.g. an equal mass binary star to have double the luminosity
     if add_BB!="None" and "R" in add_BB:
         Tstar = float(add_BB.split("_")[0][4:])
         rstar *= float(add_BB.split("R")[1])
@@ -361,6 +362,8 @@ def prepare_external_spec(energy, spectrum, L_X=1e30, X_lo=1e2, X_hi=1e4, rstar=
         tstar = float(add_BB.split("_")[1][:-3])*1e6
         Tstar, rs = lookup_from_tracks(Mstar, tstar)
         rstar *= rs
+        if '_*' in add_BB:
+            BBfudge = float(add_BB.split("_*")[1])
     elif add_BB!="None":
         raise NotImplementedError("Format of BB_params not recognised")
     print("Using rstar = {} cm = {} Rsun".format(rstar, rstar/6.957e10))
@@ -412,7 +415,7 @@ def prepare_external_spec(energy, spectrum, L_X=1e30, X_lo=1e2, X_hi=1e4, rstar=
 
     # Add stellar blackbody
     if add_BB!="None":
-        bfield += fplanck(energy, Tstar)
+        bfield += fplanck(energy, Tstar)*BBfudge
     # Add accretion blackbody
     if Lacc:
         TFUV = 12000

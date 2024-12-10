@@ -477,16 +477,10 @@ contains
     real*8,intent(in)::x(nspecies)
     real*8::fLoss(2)
 
-    print *, "USERVAR: calculate individual losses"
-
     call compute_secondary_loss(x)
-
-    print *, "USERVAR: assign losses to array"
 
     fLoss(1) = fLoss_ion
     fLoss(2) = fLoss_rad
-
-    print *, "USERVAR: return fLoss array 1/2"
 
   end function prizmo_get_fLoss
 

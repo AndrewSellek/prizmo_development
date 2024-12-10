@@ -325,11 +325,7 @@ contains
     real(C_DOUBLE),intent(in)::x(nspecies)
     real(C_DOUBLE),intent(out)::fLoss(2)
 
-    print *, "USERVAR: retrieve fLoss"
-
     fLoss = prizmo_get_fLoss(x)
-
-    print *, "USERVAR: return fLoss array 2/2"
 
   end subroutine prizmo_get_fLoss_c
 

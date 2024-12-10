@@ -261,15 +261,15 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=Fal
         spj = sp2spj(collider)
         idx = sp2idx(collider)
 
-        fhk = [[None for _ in range(nlevels)] for _ in range(nlevels)]
+        fhk = [[None for _ in range(nlev_coll)] for _ in range(nlev_coll)]
         vnames = []
-        for i in range(1, nlevels):
-            for j in range(nlevels):
+        for i in range(1, nlev_coll):
+            for j in range(nlev_coll):
                 if j != i:
                     kname = "k%d%d" % (j, i)
                     # fhk[j][i] = open(data_dir+"cool_%s_%s_%s.dat" % (atom, collider, kname), "w")
                 else:
-                    kname = "".join(["k"+str(i)+str(k) for k in range(nlevels) if k != i])
+                    kname = "".join(["k"+str(i)+str(k) for k in range(nlev_coll) if k != i])
                 vnames.append(kname)
 
                 ffname = data_dir+"cool_%s_%s_%s.dat" % (atom, collider, kname)
@@ -299,10 +299,10 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=Fal
 
         fnames = ["\"runtime_data/cool_%s_%s_%s.dat\"" % (atom, collider, x) for x in vnames]
 
-        loader += "fnames_%dlev = (/%s/)\n\n" % (nlevels, ", &\n".join(fnames))
+        loader += "fnames_%dlev = (/%s/)\n\n" % (nlev_coll, ", &\n".join(fnames))
 
         loader += "call load_1d_fit_vec(fnames_%dlev, atomic_cooling_%dlev_nvec, atomic_cooling_n1, &\n" \
-                  "atomic_cooling_table_%s_%s, do_log=.false.)\n\n" % (nlevels, nlevels, sp2spj(atom), spj)
+                  "atomic_cooling_table_%s_%s, do_log=.false.)\n\n" % (nlev_coll, nlev_coll, sp2spj(atom), spj)
 
         if collider in data["rates_m"] and multiplet_hierachy:
             fnames_m = ["\"runtime_data/cool_%s_%s_%s.dat\"" % (atom, collider, x) for x in vnames_m]
@@ -313,20 +313,20 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=Fal
                       "atomic_cooling_table_%s_%s, do_log=.false.)\n\n" % (nmultiplets, nmultiplets, sp2spj(atom), spj)
 
         commons += "type(fit1d_data_vec(nv=atomic_cooling_%dlev_nvec, n1=atomic_cooling_n1))::atomic_cooling_table_%s_%s\n" \
-                   % (nlevels, sp2spj(atom), spj)
+                   % (nlev_coll, sp2spj(atom), spj)
 
         rates = data["rates"][collider]
         if collider in data["rates_m"] and multiplet_hierachy:
             rates_m = data["rates_m"][collider]
         for tgas in np.linspace(0, 6, nt):
-            for i in range(1, nlevels):
-                for j in range(nlevels):
+            for i in range(1, nlev_coll):
+                for j in range(nlev_coll):
                     if fhk[j][i] is None:
                         continue
                     if j != i:
                         kk = rates[j, i](tgas)
                     else:
-                        kk = np.log10(sum([1e1**rates[i, k](tgas) for k in range(nlevels) if i != k]))
+                        kk = np.log10(sum([1e1**rates[i, k](tgas) for k in range(nlev_coll) if i != k]))
                     fhk[j][i].write("%17.8e %17.8e\n" % (tgas, kk))
             if collider in data["rates_m"] and multiplet_hierachy:
                 for i, mi in enumerate(multiplets[1:]):
@@ -339,8 +339,8 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=Fal
                             kk = np.log10(sum([1e1**rates_m[i+1, k](tgas) for k in range(nmultiplets) if i+1 != k]))
                         fhk_m[j][i+1].write("%17.8e %17.8e\n" % (tgas, kk))
 
-        for i in range(1, nlevels):
-            for j in range(nlevels):
+        for i in range(1, nlev_coll):
+            for j in range(nlev_coll):
                 if fhk[j][i] is None:
                     continue
                 fhk[j][i].close()
@@ -352,14 +352,14 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=Fal
                         continue
                     fhk_m[j][i].close()
 
-        defs.append("kfit_%s(atomic_cooling_%dlev_nvec)" % (spj, nlevels))
+        defs.append("kfit_%s(atomic_cooling_%dlev_nvec)" % (spj, nlev_coll))
 
         fits += "  kfit_%s = 1d1**interp_1dfit_vec(log_Tgas, atomic_cooling_table_%s_%s, & \n" % (spj, sp2spj(atom), spj)
-        fits += "    atomic_cooling_%dlev_nvec, atomic_cooling_n1)\n\n" % nlevels
+        fits += "    atomic_cooling_%dlev_nvec, atomic_cooling_n1)\n\n" % nlev_coll
 
         count = 0
-        for i in range(1, nlevels):
-            for j in range(nlevels):
+        for i in range(1, nlev_coll):
+            for j in range(nlev_coll):
                 kfit_name = "kfit_%s(%d) * x(%s)" % (spj, count + 1, idx)
                 aa[i][j].append(kfit_name)
                 count += 1

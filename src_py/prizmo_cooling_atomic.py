@@ -22,6 +22,7 @@ def prepare_atomic_cooling_levels(H2_inc, fname="../data/atomic_cooling/krome_da
     cool_arr = "cools(1) = atomic_cooling_H(x, 1d1**log_Tgas)\n"
     icount = 0
     for atom in atoms:
+        print(atom)
         data = krome_cooling(atom, fname=fname)
         if data["nlevels"] in [2, 3, 5]:
             fs, ls, cs, ct = prepare_xlevel(data, atom, data["nlevels"], H2_inc)
@@ -229,6 +230,9 @@ def rate2fit(expr, species, collider, gu, strength=False):
 def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000):
 
     from prizmo_commons import sp2spj, sp2idx, py2f90
+    multipletE, uniqueE = np.unique(data['multipletE'], return_index=True)
+    multiplets = np.array(data['multiplets'])[uniqueE]
+    nmultiplets = len(multiplets)
 
     aa = [[[] for _ in range(nlevels)] for _ in range(nlevels)]
 
@@ -271,6 +275,25 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000):
                     print("skipping, cooling file found", ffname)
                     continue
                 fhk[j][i] = open(ffname, "w")
+                
+        if collider in data["rates_m"]:
+            fhk_m = [[None for _ in range(nmultiplets)] for _ in range(nmultiplets)]
+            vnames_m = []
+            for i, mi in enumerate(multiplets[1:]):
+                for j, mj in enumerate(multiplets):
+                    if mj != mi:
+                        kname = "k%s%s" % (mj, mi)
+                        # fhk[j][i] = open(data_dir+"cool_%s_%s_%s.dat" % (atom, collider, kname), "w")
+                    else:
+                        kname = "".join(["k"+mi+mk for mk in multiplets if mk != mi])
+                    vnames_m.append(kname)
+
+                    ffname = data_dir+"cool_%s_%s_%s.dat" % (atom, collider, kname)
+                    if os.path.isfile(ffname):
+                        print("skipping, cooling file found", ffname)
+                        continue
+                    print("Opening file {},{} for edits:".format(j,i+1), ffname)
+                    fhk_m[j][i+1] = open(ffname, "w")
 
         fnames = ["\"runtime_data/cool_%s_%s_%s.dat\"" % (atom, collider, x) for x in vnames]
 
@@ -279,10 +302,22 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000):
         loader += "call load_1d_fit_vec(fnames_%dlev, atomic_cooling_%dlev_nvec, atomic_cooling_n1, &\n" \
                   "atomic_cooling_table_%s_%s, do_log=.false.)\n\n" % (nlevels, nlevels, sp2spj(atom), spj)
 
+        """
+        if collider in data["rates_m"]:
+            fnames_m = ["\"runtime_data/cool_%s_%s_%s.dat\"" % (atom, collider, x) for x in vnames_m]
+
+            loader += "fnames_%dlev = (/%s/)\n\n" % (nmultiplets, ", &\n".join(fnames_m))
+
+            loader += "call load_1d_fit_vec(fnames_%dlev, atomic_cooling_%dlev_nvec, atomic_cooling_n1, &\n" \
+                      "atomic_cooling_table_%s_%s, do_log=.false.)\n\n" % (nmultiplets, nmultiplets, sp2spj(atom), spj)
+        """
+
         commons += "type(fit1d_data_vec(nv=atomic_cooling_%dlev_nvec, n1=atomic_cooling_n1))::atomic_cooling_table_%s_%s\n" \
                    % (nlevels, sp2spj(atom), spj)
 
         rates = data["rates"][collider]
+        if collider in data["rates_m"]:
+            rates_m = data["rates_m"][collider]
         for tgas in np.linspace(0, 6, nt):
             for i in range(1, nlevels):
                 for j in range(nlevels):
@@ -293,12 +328,29 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000):
                     else:
                         kk = np.log10(sum([1e1**rates[i, k](tgas) for k in range(nlevels) if i != k]))
                     fhk[j][i].write("%17.8e %17.8e\n" % (tgas, kk))
+            if collider in data["rates_m"]:
+                for i, mi in enumerate(multiplets[1:]):
+                    for j, mj in enumerate(multiplets):
+                        if fhk_m[j][i+1] is None:
+                            continue
+                        if mj != mi:
+                            kk = rates_m[j, i+1](tgas)
+                        else:
+                            kk = np.log10(sum([1e1**rates_m[i+1, k](tgas) for k in range(nmultiplets) if i+1 != k]))
+                        fhk_m[j][i+1].write("%17.8e %17.8e\n" % (tgas, kk))
 
         for i in range(1, nlevels):
             for j in range(nlevels):
                 if fhk[j][i] is None:
                     continue
                 fhk[j][i].close()
+                
+        if collider in data["rates_m"]:
+            for i in range(1,nmultiplets):
+                for j in range(nmultiplets):
+                    if fhk_m[j][i] is None:
+                        continue
+                    fhk_m[j][i].close()
 
         defs.append("kfit_%s(atomic_cooling_%dlev_nvec)" % (spj, nlevels))
 
@@ -378,7 +430,14 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
     data = {"nlevels": 0,
             "weights": [],
             "deltaE": [],
-            "rates": dict()}
+            "terms": [],
+            "multiplets": [],
+            "multipletE": [],
+            "rates": dict(),
+            "rates_m": dict()}
+
+    def fzero(arg):
+        return -99.
 
     with open(fname) as file:
         rows = file.read()
@@ -403,12 +462,16 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
         if srow.startswith("level:"):
 
             if len(srow.split(",")) == 4:
-                _, deltaE, g, _ = srow.split(",")
+                _, deltaE, g, term = srow.split(",")
+                term = term.replace(' ','')
             else:
-                _, deltaE, g = srow.split(",")
+                raise Exception("Atomic energy level not specified in expected format (n, deltaE, g, term):", srow)
+                #_, deltaE, g = srow.split(",")
             data["nlevels"] += 1
             data["weights"].append(float(g))
             data["deltaE"].append(float(deltaE) * kboltzmann)  # erg
+            data["terms"].append(term)
+            data["multiplets"].append(''.join([term[c] if (term[c].isalpha() or term[:c+1].isnumeric()) else '' for c in range(len(term))]))
         elif "-> " in srow:
             if "Aul" not in data:
                 nlevels = data["nlevels"]
@@ -428,9 +491,6 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
             up = int(up)
             low = int(low)
 
-            def fzero(arg):
-                return -99.
-
             if collider not in data["rates"]:
                 data["rates"][collider] = np.full((nlevels, nlevels), fzero, dtype=object)
             trange, kul = rate2fit(rate, species, collider, data["weights"][up], strength)
@@ -448,6 +508,65 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
                 plt.show()
             data["rates"][collider][up, low] = interp1d(np.log10(trange), np.log10(kul))
             data["rates"][collider][low, up] = interp1d(np.log10(trange), np.log10(klu))
+            
+    multiplets = np.unique(data['multiplets'])
+    nmultiplets = len(multiplets)
+    trange = np.logspace(0, 6, 10000)
+    Eeff = {}
+    totalweights = {}
+    for multiplet in multiplets:
+        terms = np.nonzero(np.array(data["multiplets"])==multiplet)[0]
+        #print(multiplet, terms)
+        deltaE  = np.array(data["deltaE"])[terms]
+        weights = np.array(data["weights"])[terms]
+        totalweights[multiplet] = np.sum(weights)
+        Elim = np.sum(weights*deltaE)/np.sum(weights)
+        if len(terms)==1:
+            Eeff[multiplet] = np.full_like(trange,Elim)
+        else:    
+            totalweight = np.sum(weights)
+            Eeff[multiplet] = Elim - kboltzmann * trange * np.log(np.sum([g*np.exp(-(E-Elim)/kboltzmann/trange) for g, E in zip(weights, deltaE)], axis=0) / np.sum(weights))
+            #plt.loglog(trange, Eeff/kboltzmann)
+            #for E in deltaE:
+            #    plt.axhline(E/kboltzmann)
+            #plt.show()
+    for multiplet in data['multiplets']:
+        data['multipletE'].append(Eeff[multiplet][-1])
+    multiplets = multiplets[np.argsort([E[-1] for E in Eeff.values()])]
+    for collider in data["rates"].keys():
+        #data["rates_m"][collider] = np.full((nmultiplets, nmultiplets), fzero, dtype=object)
+        for l, ml in enumerate(multiplets):
+            terms_l = np.nonzero(np.array(data["multiplets"])==ml)[0]
+            for u, mu in enumerate(multiplets):
+                terms_u = np.nonzero(np.array(data["multiplets"])==mu)[0]
+                delta = Eeff[mu] - Eeff[ml]
+                if delta[-1]<=0:
+                    continue
+                kul = np.zeros_like(trange)
+                for low in terms_l:
+                    for up in terms_u:
+                        kpart = data["rates"][collider][up, low](np.log10(trange))
+                        if np.max(kpart) > -99:
+                            print("add term {},{} to {},{} for collider {}".format(up,low,mu,ml,collider))
+                            kul += 10**kpart
+                if np.max(kul)==0:
+                    print("No significant rates for collider", collider)
+                    continue
+                if collider not in data["rates_m"]:
+                    data["rates_m"][collider] = np.full((nmultiplets, nmultiplets), fzero, dtype=object)
+                klu = kul * totalweights[mu] / totalweights[ml] \
+                    * np.exp(-delta / kboltzmann / trange)
+                klu += 1e-99
+                kul += 1e-99
+                if kul.min() < 0e0 or klu.min() < 0e0:
+                    print("ERROR: negative rate coefficient in %s cooling, collider %s!" % (species, collider))
+                    print(kul.min(), klu.min())
+                    plt.clf()
+                    plt.loglog(trange, kul)
+                    plt.loglog(trange, klu)
+                    plt.show()
+                data["rates_m"][collider][u, l] = interp1d(np.log10(trange), np.log10(kul))
+                data["rates_m"][collider][l, u] = interp1d(np.log10(trange), np.log10(klu))
 
     return data
 

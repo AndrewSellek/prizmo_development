@@ -251,7 +251,9 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=Fal
     for collider in data["rates"]:
         if (collider == 'H2or' or collider =='H2pa') and not H2_inc:
             continue
-        print(atom, collider)
+        nlev_coll = data["collider_max"][collider]+1
+        assert nlev_coll<=nlevels
+        print(atom, collider, nlev_coll)
 
         if "or" in collider or "pa" in collider:
             has_ortho_para = True
@@ -432,7 +434,8 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
             "multiplets": [],
             "multipletE": [],
             "rates": dict(),
-            "rates_m": dict()}
+            "rates_m": dict(),
+            "collider_max": dict()}
 
     def fzero(arg):
         return -99.
@@ -491,6 +494,8 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
 
             if collider not in data["rates"]:
                 data["rates"][collider] = np.full((nlevels, nlevels), fzero, dtype=object)
+                data["collider_max"][collider] = -np.inf
+            data["collider_max"][collider] = max(data["collider_max"][collider],up)
             trange, kul = rate2fit(rate, species, collider, data["weights"][up], strength)
             delta = data["deltaE"][up] - data["deltaE"][low]
             klu = kul * data["weights"][up] / data["weights"][low] \
@@ -545,10 +550,10 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
                     for up in terms_u:
                         kpart = data["rates"][collider][up, low](np.log10(trange))
                         if np.max(kpart) > -99:
-                            print("add term {},{} to {},{} for collider {}".format(up,low,mu,ml,collider))
+                            #print("add term {},{} to {},{} for collider {}".format(up,low,mu,ml,collider))
                             kul += 10**kpart
                 if np.max(kul)==0:
-                    print("No significant rates for collider", collider)
+                    #print("No significant rates for collider", collider)
                     continue
                 if collider not in data["rates_m"]:
                     data["rates_m"][collider] = np.full((nmultiplets, nmultiplets), fzero, dtype=object)

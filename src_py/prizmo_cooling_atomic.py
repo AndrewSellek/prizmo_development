@@ -227,7 +227,7 @@ def rate2fit(expr, species, collider, gu, strength=False):
 
 
 # ************************
-def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000):
+def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=False):
 
     from prizmo_commons import sp2spj, sp2idx, py2f90
     multipletE, uniqueE = np.unique(data['multipletE'], return_index=True)
@@ -276,7 +276,7 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000):
                     continue
                 fhk[j][i] = open(ffname, "w")
                 
-        if collider in data["rates_m"]:
+        if collider in data["rates_m"] and multiplet_hierachy:
             fhk_m = [[None for _ in range(nmultiplets)] for _ in range(nmultiplets)]
             vnames_m = []
             for i, mi in enumerate(multiplets[1:]):
@@ -302,21 +302,19 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000):
         loader += "call load_1d_fit_vec(fnames_%dlev, atomic_cooling_%dlev_nvec, atomic_cooling_n1, &\n" \
                   "atomic_cooling_table_%s_%s, do_log=.false.)\n\n" % (nlevels, nlevels, sp2spj(atom), spj)
 
-        """
-        if collider in data["rates_m"]:
+        if collider in data["rates_m"] and multiplet_hierachy:
             fnames_m = ["\"runtime_data/cool_%s_%s_%s.dat\"" % (atom, collider, x) for x in vnames_m]
 
             loader += "fnames_%dlev = (/%s/)\n\n" % (nmultiplets, ", &\n".join(fnames_m))
 
             loader += "call load_1d_fit_vec(fnames_%dlev, atomic_cooling_%dlev_nvec, atomic_cooling_n1, &\n" \
                       "atomic_cooling_table_%s_%s, do_log=.false.)\n\n" % (nmultiplets, nmultiplets, sp2spj(atom), spj)
-        """
 
         commons += "type(fit1d_data_vec(nv=atomic_cooling_%dlev_nvec, n1=atomic_cooling_n1))::atomic_cooling_table_%s_%s\n" \
                    % (nlevels, sp2spj(atom), spj)
 
         rates = data["rates"][collider]
-        if collider in data["rates_m"]:
+        if collider in data["rates_m"] and multiplet_hierachy:
             rates_m = data["rates_m"][collider]
         for tgas in np.linspace(0, 6, nt):
             for i in range(1, nlevels):
@@ -328,7 +326,7 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000):
                     else:
                         kk = np.log10(sum([1e1**rates[i, k](tgas) for k in range(nlevels) if i != k]))
                     fhk[j][i].write("%17.8e %17.8e\n" % (tgas, kk))
-            if collider in data["rates_m"]:
+            if collider in data["rates_m"] and multiplet_hierachy:
                 for i, mi in enumerate(multiplets[1:]):
                     for j, mj in enumerate(multiplets):
                         if fhk_m[j][i+1] is None:
@@ -345,7 +343,7 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000):
                     continue
                 fhk[j][i].close()
                 
-        if collider in data["rates_m"]:
+        if collider in data["rates_m"] and multiplet_hierachy:
             for i in range(1,nmultiplets):
                 for j in range(nmultiplets):
                     if fhk_m[j][i] is None:

@@ -43,7 +43,7 @@ def prepare_atomic_cooling_levels(H2_inc, fname="../data/atomic_cooling/krome_da
     icount = 0
     for atom in atoms:
         print(atom)
-        data = krome_cooling(atom, fname=fname)
+        data, _ = krome_cooling(atom, fname=fname)
         if data["nlevels"] in [2, 3, 5]:
             fs, As, ls, cs, ct = prepare_xlevel(data, atom, data["nlevels"], H2_inc)
             cool_arr += "cools(%d) = atomic_cooling_%s(x, log_Tgas)\n" % (icount + 2, sp2spj(atom))
@@ -563,6 +563,8 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
             
     multiplets = np.unique(data['multiplets'])
     nmultiplets = len(multiplets)
+    if nmultiplets==1:
+        return data, nmultiplets
     trange = np.logspace(0, 6, 10000)
     Eeff = {}
     totalweights = {}
@@ -620,7 +622,7 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
                 data["rates_m"][collider][u, l] = interp1d(np.log10(trange), np.log10(kul))
                 data["rates_m"][collider][l, u] = interp1d(np.log10(trange), np.log10(klu))
 
-    return data
+    return data, nmultiplets
 
 
 def lamda_cooling(fname):

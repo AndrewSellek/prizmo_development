@@ -470,7 +470,7 @@ contains
   end function prizmo_get_chi_FUV
 
   ! ************************
-  ! X-ray phtoionization loss terms
+  ! X-ray photoionization loss terms
   function prizmo_get_fLoss(x) result(fLoss)
     use prizmo_rates_heating
     implicit none
@@ -483,5 +483,8 @@ contains
     fLoss(2) = fLoss_rad
 
   end function prizmo_get_fLoss
+
+  !! PREPROCESS_GET_ATOMIC_LINES
+  !! PREPROCESS_END
 
 end module prizmo

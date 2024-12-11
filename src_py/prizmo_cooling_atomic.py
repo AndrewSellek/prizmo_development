@@ -9,6 +9,26 @@ from scipy.interpolate import interp1d
 import sys
 import shutil
 
+def prepare_line_functions(atom, nlevels):
+    lineFunc = lineFunc_c = "! *****************\n"
+
+    lineFunc += "function prizmo_get_atomic_lines_%s(x, Tgas) result(lines)\n" % sp2spj(atom)
+    lineFunc += "  use prizmo_lines_atomic\n"
+    lineFunc += "  implicit none\n"
+    lineFunc += "  real*8,intent(in)::x(nspecies), Tgas\n"
+    lineFunc += "  real*8::lines(%d)\n\n" % int(nlevels*(nlevels-1)/2)
+    lineFunc += "  lines = atomic_lines_%s(x, log10(Tgas))\n\n" % sp2spj(atom)
+    lineFunc += "end function prizmo_get_atomic_lines_%s\n\n" % sp2spj(atom)
+
+    lineFunc_c += "subroutine prizmo_get_atomic_lines_%s_c(x, Tgas, lines) bind(C)\n" % sp2spj(atom)
+    lineFunc_c += "  use prizmo_commons\n"
+    lineFunc_c += "  real(C_DOUBLE),intent(in)::x(nspecies), Tgas\n"
+    lineFunc_c += "  real(C_DOUBLE),intent(out)::lines(%d)\n\n" % int(nlevels*(nlevels-1)/2)
+    lineFunc_c += "  lines = prizmo_get_atomic_lines_%s(x, Tgas)\n\n" % sp2spj(atom)
+    lineFunc_c += "end subroutine prizmo_get_atomic_lines_%s_c\n\n" % sp2spj(atom)
+
+    return lineFunc, lineFunc_c
+
 
 def prepare_atomic_cooling(species_indexes, H2_inc, fname="../data/atomic_cooling/krome_data.dat"):
     print_title("atomic cooling")
@@ -18,7 +38,7 @@ def prepare_atomic_cooling(species_indexes, H2_inc, fname="../data/atomic_coolin
 def prepare_atomic_cooling_levels(H2_inc, fname="../data/atomic_cooling/krome_data.dat"):
     atoms = ["C", "O", "C+", "O+", "Ne+", "Ne++", "Ar+", "Ar++"]
 
-    funcs = lines = loaders = commons = cool_tot = ""
+    funcs = lines = loaders = commons = cool_tot = lineFuncs = lineFuncs_c = ""
     cool_arr = "cools(1) = atomic_cooling_H(x, 1d1**log_Tgas)\n"
     icount = 0
     for atom in atoms:
@@ -27,6 +47,7 @@ def prepare_atomic_cooling_levels(H2_inc, fname="../data/atomic_cooling/krome_da
         if data["nlevels"] in [2, 3, 5]:
             fs, As, ls, cs, ct = prepare_xlevel(data, atom, data["nlevels"], H2_inc)
             cool_arr += "cools(%d) = atomic_cooling_%s(x, log_Tgas)\n" % (icount + 2, sp2spj(atom))
+            lFs, lFcs = prepare_line_functions(atom, data["nlevels"])
             icount += 1
         else:
             continue
@@ -35,8 +56,11 @@ def prepare_atomic_cooling_levels(H2_inc, fname="../data/atomic_cooling/krome_da
         loaders += ls
         commons += cs
         cool_tot += ct
+        lineFuncs += lFs
+        lineFuncs_c += lFcs
 
     commons += "real*8,parameter::natomic_cools=%d\n" % (icount + 1)
+
 
     preprocess("prizmo_loaders.f90", {"LOAD_ATOMIC_COOLING": loaders})
     preprocess("prizmo_commons.f90", {"ATOMIC_COOLING_COMMONS": commons})
@@ -44,6 +68,8 @@ def prepare_atomic_cooling_levels(H2_inc, fname="../data/atomic_cooling/krome_da
                                                 "ATOMIC_COOLING": cool_tot,
                                                 "ATOMIC_COOLING_ARRAY": cool_arr})
     preprocess("prizmo_lines_atomic.f90", {"ATOMIC_LINES_FUNCTIONS": lines})
+    preprocess("prizmo.f90", {"GET_ATOMIC_LINES": lineFuncs})
+    preprocess("prizmo_c.f90", {"GET_ATOMIC_LINES_C": lineFuncs_c})
 
 
 def prepare_atomic_cooling_tables(species_indexes):
@@ -374,12 +400,12 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=Fal
     head += "  use prizmo_linear_solver\n"
     head += "  implicit none\n"
     head += "  real*8,intent(in)::x(nspecies), log_Tgas\n"
-    head += "  real*8::" + ", ".join(np.unique(defs)) + "\n\n"
+    head += "  real*8::" + ", ".join(np.unique(defs)) + "\n"
     head += "  real*8::b(%d), A(%d, %d), n(%d), H2or, H2pa\n" % (nlevels, nlevels, nlevels, nlevels)
     fun += head
     lin += head
-    fun += "  real*8::cool\n"
-    lin += "  real*8::lines(atomic_cooling_%dlev_nvec/2)\n" % nlevels
+    fun += "  real*8::cool\n\n"
+    lin += "  real*8::lines(atomic_cooling_%dlev_nvec/2)\n\n" % nlevels
 
     if has_ortho_para:
         fun += "  H2or = x(idx_H2) * ortho_to_para / (ortho_to_para + 1d0)\n"

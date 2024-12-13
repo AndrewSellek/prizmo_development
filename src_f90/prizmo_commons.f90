@@ -87,6 +87,7 @@ type(fit3d_data(n1=cool_CO_tab_n1, n2=cool_CO_tab_n2, n3=cool_CO_tab_n3))::cool_
 
 real*8::kall(nreactions)
 real*8::kall_heat(nreactions)
+real*8::kall_secondIon(nreactions)
 real*8::photo_xsecs(nphoto, nreactions)
 real*8::energy_threshold(nreactions)
 
@@ -103,8 +104,10 @@ real*8::ode_rtol(nspecies+1)
 real*8::gamma_ad, d2g, user_Av, user_cr, ortho_to_para, fPAH, XCPAH
 real*8::chi_FUV  ! habing flux in range 912-1100 AA
 real*8::rho_gas, rho_dust  ! gas and dust mass densities, g/cm3, do not change during integration
-real*8::fLoss_ion, fLoss_rad, secondion
-
+real*8::fLoss_ion, fLoss_rad, secondion, xH2
+real*8::lossH(2),lossH2(3),EthH(2),EthH2(3)
+EthH    = (/13.6*ev2erg, 10.2*ev2erg/)
+EthH2   = (/15.12*ev2erg, 11.37*ev2erg, 0.516*ev2erg/)
 
 !! PREPROCESS_RADIATION_CONSTANTS
 !! PREPROCESS_END

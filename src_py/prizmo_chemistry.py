@@ -361,7 +361,14 @@ def parse_photoheating_rate(i, krate, verbatim):
         return k
 
     k = "! %s\n" % verbatim
-    k += "f(:) = photo_xsecs(:, %d) * max(energy - energy_threshold(%d), 0d0) * kernel\n" % (i, i)
+    k += "Ephotoelectron = max(energy - energy_threshold(%d), 0d0)\n" % i
+    if '+ E' in verbatim:
+        k += "loss_ion = calc_loss_ion_E(Ephotoelectron)\nloss_rad = calc_loss_rad_E(Ephotoelectron)\n"
+        k += "f(:) = photo_xsecs(:, %d) * Ephotoelectron * kernel * loss_ion\n" % i
+        k += "kall_secondIon(%d) = sum((f(2:nphoto) + f(1:nphoto-1)) * delta_energy) / 2d0\n" % i
+        k += "f(:) = photo_xsecs(:, %d) * Ephotoelectron * kernel * max(1d0-loss_ion-loss_rad, 0d0)\n" % i
+    else:
+        k += "f(:) = photo_xsecs(:, %d) * Ephotoelectron * kernel\n" % i
     k += "kall_heat(%d) = sum((f(2:nphoto) + f(1:nphoto-1)) * delta_energy) / 2d0\n\n" % i
 
     return k
@@ -378,8 +385,8 @@ def parse_photoheating(i, krate, rr, verbatim):
         
     if '+ E' in verbatim:
         #secondIon = "! %s\n" % verbatim
-        heat += "heat = heat + kall_heat(%d) * x(%s) * max(1d0-fLoss_ion-fLoss_rad, 0d0)\n" % (i, rr[0])
-        heat += "secondIon = secondIon + kall_heat(%d) * x(%s) * fLoss_ion / (x(idx_H)*13.60*ev2erg+1.3*x(idx_H2)*15.12*ev2erg)\n" % (i, rr[0])
+        heat += "heat = heat + kall_heat(%d) * x(%s)\n" % (i, rr[0])
+        heat += "secondIon = secondIon + kall_secondIon(%d) * x(%s) / (x(idx_H)*13.60*ev2erg+1.3*x(idx_H2)*15.12*ev2erg)\n" % (i, rr[0])
     else:
         heat += "heat = heat + kall_heat(%d) * x(%s)\n" % (i, rr[0])
         

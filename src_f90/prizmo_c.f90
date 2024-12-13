@@ -318,7 +318,7 @@ contains
   end subroutine prizmo_get_chi_FUV_c
 
   ! ****************************
-  ! X-ray phtoionization loss terms
+  ! X-ray photoionization loss terms
   subroutine prizmo_get_fLoss_c(x, fLoss) bind(C)
     use prizmo_commons
     implicit none

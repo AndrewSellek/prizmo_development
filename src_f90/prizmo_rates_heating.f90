@@ -16,20 +16,6 @@ contains
 
     kernel = jflux / energy / hplanck
 
-    !!! EXAMPLE
-    !! H -> H+ + E
-    !Ephotoelectron = max(energy - energy_threshold(272), 0d0)
-    !loss_ion = calc_loss_ion_E(Ephotoelectron)
-    !loss_rad = calc_loss_rad_E(Ephotoelectron)
-    !loss_ion = lossH2(1) * (sign(0.5d0,Ephotoelectron-EthH2(1)) + 0.5d0) * xH2 + lossH(1) * (sign(0.5d0,Ephotoelectron-EthH(1)) + 0.5d0) * (1d0-xH2)
-    !loss_ion = max(min( loss_ion, 1d0), 0d0)
-    !loss_rad = (lossH2(2) * (sign(0.5d0,Ephotoelectron-EthH2(2)) + 0.5d0)  + lossH2(3) * (sign(0.5d0,Ephotoelectron-EthH2(3)) + 0.5d0)) * xH2 + lossH(2) * (sign(0.5d0,Ephotoelectron-EthH(2)) + 0.5d0) * (1d0-xH2)
-    !loss_rad = max(min( loss_rad, 1d0), 0d0)
-    !f(:) = photo_xsecs(:, 272) * Ephotoelectron * kernel * max(1d0-loss_ion-loss_rad, 0d0)
-    !kall_heat(272) = sum((f(2:nphoto) + f(1:nphoto-1)) * delta_energy) / 2d0
-    !f(:) = photo_xsecs(:, 272) * Ephotoelectron * kernel * loss_ion
-    !kall_secondIon(272) = sum((f(2:nphoto) + f(1:nphoto-1)) * delta_energy) / 2d0
-
     !! PREPROCESS_PHOTOHEATING_RATE
     !! PREPROCESS_END
 
@@ -56,7 +42,7 @@ contains
     real*8,intent(in)::Ephotoelectron(nphoto)
     real*8::loss_rad(nphoto)
 
-    loss_rad = lossH2(1) * (sign(0.5d0,Ephotoelectron-EthH2(1)) + 0.5d0) * xH2 + lossH(1) * (sign(0.5d0,Ephotoelectron-EthH(1)) + 0.5d0) * (1d0-xH2)
+    loss_rad = (lossH2(2) * (sign(0.5d0,Ephotoelectron-EthH2(2)) + 0.5d0)  + lossH2(3) * (sign(0.5d0,Ephotoelectron-EthH2(3)) + 0.5d0)) * xH2 + lossH(2) * (sign(0.5d0,Ephotoelectron-EthH(2)) + 0.5d0) * (1d0-xH2)
     loss_rad = max(min(loss_rad, 1d0), 0d0)
 
   end function calc_loss_rad_E

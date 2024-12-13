@@ -2,6 +2,13 @@ module prizmo_commons
 use prizmo_fit
 implicit none
 
+real*8,parameter::hplanck=6.6260755d-27  ! erg * s
+real*8,parameter::kboltzmann=1.380658d-16  ! erg / K
+real*8,parameter::erg2ev=6.24150647996d11  ! 1 erg in eV
+real*8,parameter::ev2erg=1d0 / erg2ev  ! 1 eV in erg
+real*8,parameter::pmass=1.6726219d-24  ! proton mass in g
+real*8,parameter::pi=acos(-1d0)
+
 !! PREPROCESS_COMMON_VARS
 !! PREPROCESS_END
 
@@ -19,6 +26,7 @@ real*8::jele_cool_fit_data(zmin:zmax, jtab_fit_nt)
 
 integer,parameter::atomic_cooling_n1=10000  ! tgas, K
 integer,parameter::atomic_cooling_5lev_nvec=20  ! 5 levels
+integer,parameter::atomic_cooling_4lev_nvec=12  ! 4 levels
 integer,parameter::atomic_cooling_3lev_nvec=6  ! 3 levels
 integer,parameter::atomic_cooling_2lev_nvec=2  ! 2 levels
 
@@ -105,9 +113,9 @@ real*8::gamma_ad, d2g, user_Av, user_cr, ortho_to_para, fPAH, XCPAH
 real*8::chi_FUV  ! habing flux in range 912-1100 AA
 real*8::rho_gas, rho_dust  ! gas and dust mass densities, g/cm3, do not change during integration
 real*8::fLoss_ion, fLoss_rad, secondion, xH2
-real*8::lossH(2),lossH2(3),EthH(2),EthH2(3)
-EthH    = (/13.6*ev2erg, 10.2*ev2erg/)
-EthH2   = (/15.12*ev2erg, 11.37*ev2erg, 0.516*ev2erg/)
+real*8::lossH(2),lossH2(3)
+real*8::EthH(2)=(/13.6*ev2erg, 10.2*ev2erg/)
+real*8::EthH2(3)=(/15.12*ev2erg, 11.37*ev2erg, 0.516*ev2erg/)
 
 !! PREPROCESS_RADIATION_CONSTANTS
 !! PREPROCESS_END
@@ -116,13 +124,6 @@ EthH2   = (/15.12*ev2erg, 11.37*ev2erg, 0.516*ev2erg/)
 !! PREPROCESS_END
 
 real*8,parameter::d2g_min=1d-8  ! below this limit no dust cooling/heating are calculated
-
-real*8,parameter::hplanck=6.6260755d-27  ! erg * s
-real*8,parameter::kboltzmann=1.380658d-16  ! erg / K
-real*8,parameter::erg2ev=6.24150647996d11  ! 1 erg in eV
-real*8,parameter::ev2erg=1d0 / erg2ev  ! 1 eV in erg
-real*8,parameter::pmass=1.6726219d-24  ! proton mass in g
-real*8,parameter::pi=acos(-1d0)
 
 logical::solve_thermo
 logical::solve_chemistry

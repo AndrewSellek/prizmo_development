@@ -71,7 +71,7 @@ contains
     ! character(len=1024)::fnames2d(atomic_cooling_nvec2d)
     ! character(len=1024)::fnames3d(atomic_cooling_nvec3d)
     ! character(len=1024)::fnames4d(atomic_cooling_nvec4d)
-    character(len=1024)::fnames_5lev(20), fnames_3lev(6), fnames_2lev(2)
+    character(len=1024)::fnames_5lev(20), fnames_4lev(12), fnames_3lev(6), fnames_2lev(2)
 
     print *, "loading atomic cooling..."
 

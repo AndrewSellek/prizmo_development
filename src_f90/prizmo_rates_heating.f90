@@ -41,10 +41,10 @@ contains
     use prizmo_commons
     implicit none
     real*8,intent(in)::Ephotoelectron(nphoto)
-    real*8::loss_ion(nspecies)
+    real*8::loss_ion(nphoto)
 
     loss_ion = lossH2(1) * (sign(0.5d0,Ephotoelectron-EthH2(1)) + 0.5d0) * xH2 + lossH(1) * (sign(0.5d0,Ephotoelectron-EthH(1)) + 0.5d0) * (1d0-xH2)
-    loss_ion = max(min( loss_ion, 1d0), 0d0)
+    loss_ion = max(min(loss_ion, 1d0), 0d0)
 
   end function calc_loss_ion_E
 
@@ -54,10 +54,10 @@ contains
     use prizmo_commons
     implicit none
     real*8,intent(in)::Ephotoelectron(nphoto)
-    real*8::loss_rad(nspecies)
+    real*8::loss_rad(nphoto)
 
     loss_rad = lossH2(1) * (sign(0.5d0,Ephotoelectron-EthH2(1)) + 0.5d0) * xH2 + lossH(1) * (sign(0.5d0,Ephotoelectron-EthH(1)) + 0.5d0) * (1d0-xH2)
-    loss_rad = max(min( loss_ion, 1d0), 0d0)
+    loss_rad = max(min(loss_rad, 1d0), 0d0)
 
   end function calc_loss_rad_E
 

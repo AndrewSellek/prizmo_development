@@ -9,6 +9,26 @@ from scipy.interpolate import interp1d
 import sys
 import shutil
 
+def prepare_line_functions(atom, nlevels):
+    lineFunc = lineFunc_c = "! *****************\n"
+
+    lineFunc += "function prizmo_get_atomic_lines_%s(x, Tgas) result(lines)\n" % sp2spj(atom)
+    lineFunc += "  use prizmo_lines_atomic\n"
+    lineFunc += "  implicit none\n"
+    lineFunc += "  real*8,intent(in)::x(nspecies), Tgas\n"
+    lineFunc += "  real*8::lines(%d)\n\n" % int(nlevels*(nlevels-1)/2)
+    lineFunc += "  lines = atomic_lines_%s(x, log10(Tgas))\n\n" % sp2spj(atom)
+    lineFunc += "end function prizmo_get_atomic_lines_%s\n\n" % sp2spj(atom)
+
+    lineFunc_c += "subroutine prizmo_get_atomic_lines_%s_c(x, Tgas, lines) bind(C)\n" % sp2spj(atom)
+    lineFunc_c += "  use prizmo_commons\n"
+    lineFunc_c += "  real(C_DOUBLE),intent(in)::x(nspecies), Tgas\n"
+    lineFunc_c += "  real(C_DOUBLE),intent(out)::lines(%d)\n\n" % int(nlevels*(nlevels-1)/2)
+    lineFunc_c += "  lines = prizmo_get_atomic_lines_%s(x, Tgas)\n\n" % sp2spj(atom)
+    lineFunc_c += "end subroutine prizmo_get_atomic_lines_%s_c\n\n" % sp2spj(atom)
+
+    return lineFunc, lineFunc_c
+
 
 def prepare_atomic_cooling(species_indexes, H2_inc, fname="../data/atomic_cooling/krome_data.dat"):
     print_title("atomic cooling")
@@ -16,32 +36,40 @@ def prepare_atomic_cooling(species_indexes, H2_inc, fname="../data/atomic_coolin
 
 
 def prepare_atomic_cooling_levels(H2_inc, fname="../data/atomic_cooling/krome_data.dat"):
-    atoms = ["C", "O", "C+", "O+"]
+    atoms = ["C", "O", "C+", "O+", "Ne+", "Ne++", "Ar+", "Ar++"]
 
-    funcs = loaders = commons = cool_tot = ""
+    funcs = lines = loaders = commons = cool_tot = lineFuncs = lineFuncs_c = ""
     cool_arr = "cools(1) = atomic_cooling_H(x, 1d1**log_Tgas)\n"
     icount = 0
     for atom in atoms:
         print(atom)
-        data = krome_cooling(atom, fname=fname)
+        data, _ = krome_cooling(atom, fname=fname)
         if data["nlevels"] in [2, 3, 5]:
-            fs, ls, cs, ct = prepare_xlevel(data, atom, data["nlevels"], H2_inc)
+            fs, As, ls, cs, ct = prepare_xlevel(data, atom, data["nlevels"], H2_inc)
             cool_arr += "cools(%d) = atomic_cooling_%s(x, log_Tgas)\n" % (icount + 2, sp2spj(atom))
+            lFs, lFcs = prepare_line_functions(atom, data["nlevels"])
             icount += 1
         else:
             continue
         funcs += fs
+        lines += As
         loaders += ls
         commons += cs
         cool_tot += ct
+        lineFuncs += lFs
+        lineFuncs_c += lFcs
 
     commons += "real*8,parameter::natomic_cools=%d\n" % (icount + 1)
+
 
     preprocess("prizmo_loaders.f90", {"LOAD_ATOMIC_COOLING": loaders})
     preprocess("prizmo_commons.f90", {"ATOMIC_COOLING_COMMONS": commons})
     preprocess("prizmo_cooling_atomic.f90", {"ATOMIC_COOLING_FUNCTIONS": funcs,
                                                 "ATOMIC_COOLING": cool_tot,
                                                 "ATOMIC_COOLING_ARRAY": cool_arr})
+    preprocess("prizmo_lines_atomic.f90", {"ATOMIC_LINES_FUNCTIONS": lines})
+    preprocess("prizmo.f90", {"GET_ATOMIC_LINES": lineFuncs})
+    preprocess("prizmo_c.f90", {"GET_ATOMIC_LINES_C": lineFuncs_c})
 
 
 def prepare_atomic_cooling_tables(species_indexes):
@@ -366,22 +394,31 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=Fal
 
     fun = "! *****************\n"
     fun += "function atomic_cooling_%s(x, log_Tgas) result(cool)\n" % sp2spj(atom)
-    fun += "  use prizmo_commons\n"
-    fun += "  use prizmo_linear_solver\n"
-    fun += "  implicit none\n"
-    fun += "  real*8,intent(in)::x(nspecies), log_Tgas\n"
-    fun += "  real*8::cool, b(%d), A(%d, %d), n(%d), H2or, H2pa\n" % (nlevels, nlevels, nlevels, nlevels)
-    fun += "  real*8::" + ", ".join(np.unique(defs)) + "\n\n"
+    lin = "! *****************\n"
+    lin += "function atomic_lines_%s(x, log_Tgas) result(cool)\n" % sp2spj(atom)
+    head = "  use prizmo_commons\n"
+    head += "  use prizmo_linear_solver\n"
+    head += "  implicit none\n"
+    head += "  real*8,intent(in)::x(nspecies), log_Tgas\n"
+    head += "  real*8::" + ", ".join(np.unique(defs)) + "\n"
+    head += "  real*8::b(%d), A(%d, %d), n(%d), H2or, H2pa\n" % (nlevels, nlevels, nlevels, nlevels)
+    fun += head
+    lin += head
+    fun += "  real*8::cool\n\n"
+    lin += "  real*8::lines(atomic_cooling_%dlev_nvec/2)\n\n" % nlevels
 
     if has_ortho_para:
         fun += "  H2or = x(idx_H2) * ortho_to_para / (ortho_to_para + 1d0)\n"
         fun += "  H2pa = x(idx_H2) / (ortho_to_para + 1d0)\n\n"
+        lin += "  H2or = x(idx_H2) * ortho_to_para / (ortho_to_para + 1d0)\n"
+        lin += "  H2pa = x(idx_H2) / (ortho_to_para + 1d0)\n\n"
 
     #fun += "#ifdef NO%sCOOL\n\n" % sp2spj(atom)
     #fun += "  cool = 0d0\n\n"
     #fun += "#else\n\n"
 
     fun += fits
+    lin += fits
 
     A = ""
     for i in range(1, nlevels):
@@ -396,9 +433,12 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=Fal
     A = A.replace("x(idx_H2pa)", "H2pa")
     A = A.replace("x(idx_H2or)", "H2or")
     fun += A
+    lin += A
 
     fun += "  b = (/1d0, %s/)\n" % ", ".join(["0d0" for _ in range(nlevels - 1)])
     fun += "  n = linear_solver_n%d(A, b)\n\n" % nlevels
+    lin += "  b = (/1d0, %s/)\n" % ", ".join(["0d0" for _ in range(nlevels - 1)])
+    lin += "  n = linear_solver_n%d(A, b)\n\n" % nlevels
 
     fun += "  cool = 0d0\n"
     for i in range(1, nlevels):
@@ -407,22 +447,31 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=Fal
             de = data["deltaE"][i] - data["deltaE"][j]
             esum.append("%s * %s" % (py2f90(data["Aul"][i, j]), py2f90(de)))
         fun += "  cool = cool + n(%d) * (%s)\n" % (i+1, " + ".join(esum))
-
     fun += "  cool = cool * x(%s)\n" % sp2idx(atom)
     fun += "  cool = max(cool, 0d0)\n\n"
 
+    nline=0
+    for i in range(1, nlevels):
+        for j in range(i):
+            nline+=1
+            de = data["deltaE"][i] - data["deltaE"][j]
+            lin += "  lines(%d) = n(%d) * %s * %s\n" % (nline, i+1, py2f90(data["Aul"][i, j]), py2f90(de))
+
     fun = fun.replace("x(x(idx_H2pa))", "x(idx_H2) / (ortho_to_para + 1d0)")
     fun = fun.replace("x(x(idx_H2or))", "x(idx_H2) * ortho_to_para / (ortho_to_para + 1d0)")
+    lin = lin.replace("x(x(idx_H2pa))", "x(idx_H2) / (ortho_to_para + 1d0)")
+    lin = lin.replace("x(x(idx_H2or))", "x(idx_H2) * ortho_to_para / (ortho_to_para + 1d0)")
 
     #fun += "#endif\n\n"
 
     fun += "end function atomic_cooling_%s\n\n" % sp2spj(atom)
+    lin += "end function atomic_lines_%s\n\n" % sp2spj(atom)
 
     # cool_tot += "if(x(%s) > xlimit) then\n" % sp2idx(atom)
     cool_tot += " cool = cool + atomic_cooling_%s(x, log_Tgas)\n" % sp2spj(atom)
     # cool_tot += "end if\n"
 
-    return fun, loader, commons, cool_tot
+    return fun, lin, loader, commons, cool_tot
 
 
 def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
@@ -514,6 +563,8 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
             
     multiplets = np.unique(data['multiplets'])
     nmultiplets = len(multiplets)
+    if nmultiplets==1:
+        return data, nmultiplets
     trange = np.logspace(0, 6, 10000)
     Eeff = {}
     totalweights = {}
@@ -571,7 +622,7 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
                 data["rates_m"][collider][u, l] = interp1d(np.log10(trange), np.log10(kul))
                 data["rates_m"][collider][l, u] = interp1d(np.log10(trange), np.log10(klu))
 
-    return data
+    return data, nmultiplets
 
 
 def lamda_cooling(fname):

@@ -329,4 +329,7 @@ contains
 
   end subroutine prizmo_get_fLoss_c
 
+  !! PREPROCESS_GET_ATOMIC_LINES_C
+  !! PREPROCESS_END
+
 end module prizmo_c

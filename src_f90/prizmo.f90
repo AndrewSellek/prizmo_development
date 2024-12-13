@@ -484,4 +484,7 @@ contains
 
   end function prizmo_get_fLoss
 
+  !! PREPROCESS_GET_ATOMIC_LINES
+  !! PREPROCESS_END
+
 end module prizmo

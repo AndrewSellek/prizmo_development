@@ -395,7 +395,7 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=Fal
     fun = "! *****************\n"
     fun += "function atomic_cooling_%s(x, log_Tgas) result(cool)\n" % sp2spj(atom)
     lin = "! *****************\n"
-    lin += "function atomic_lines_%s(x, log_Tgas) result(cool)\n" % sp2spj(atom)
+    lin += "function atomic_lines_%s(x, log_Tgas) result(lines)\n" % sp2spj(atom)
     head = "  use prizmo_commons\n"
     head += "  use prizmo_linear_solver\n"
     head += "  implicit none\n"

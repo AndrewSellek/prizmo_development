@@ -37,8 +37,8 @@ def prepare():
         plt.loglog(trange, coolHDL, label="HDL")
         plt.legend()
         plt.show()
-    else:
-        plt.close()
+    #else:
+    #    plt.close()
 
 
 def fHDL(temp):

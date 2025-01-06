@@ -94,9 +94,9 @@ def prepare(user_energy_eV, ne=100, nt=100, ng=50):
         else:
             plt.close()
 
-    plt.pcolor(np.log10(ea_range), np.log10(ngas_range), np.abs(tdiff.T), cmap="jet", norm=matplotlib.colors.LogNorm())
-    plt.colorbar()
     if plotOn:
+        plt.pcolor(np.log10(ea_range), np.log10(ngas_range), np.abs(tdiff.T), cmap="jet", norm=matplotlib.colors.LogNorm())
+        plt.colorbar()
         plt.show()
     else:
         plt.close()
@@ -126,14 +126,14 @@ def prepare(user_energy_eV, ne=100, nt=100, ng=50):
 def plot(td_min, td_max, fek, Bint, ea, tgas, ngas):
     trange = np.logspace(np.log10(td_min), np.log10(td_max), 100)
 
-    plt.semilogx(trange, [f(x, fek, Bint, ea, tgas) for x in trange], label="f")
-    plt.yscale("symlog")
-    plt.semilogx(trange, [em(x, Bint) for x in trange], label="em")
-    plt.semilogx(trange, ea * np.ones_like(trange), label="ea")
-    plt.semilogx(trange, [ek(x, tgas, fek) for x in trange], label="ek")
-    plt.title("T=%.1e, ngas=%.1e" % (tgas, ngas))
-    plt.legend(loc="best")
     if plotOn:
+        plt.semilogx(trange, [f(x, fek, Bint, ea, tgas) for x in trange], label="f")
+        plt.yscale("symlog")
+        plt.semilogx(trange, [em(x, Bint) for x in trange], label="em")
+        plt.semilogx(trange, ea * np.ones_like(trange), label="ea")
+        plt.semilogx(trange, [ek(x, tgas, fek) for x in trange], label="ek")
+        plt.title("T=%.1e, ngas=%.1e" % (tgas, ngas))
+        plt.legend(loc="best")
         plt.show()
     else:
         plt.close()
@@ -198,11 +198,11 @@ def load_eps():
         fe[i] = np.trapz(fa, arange)
 
     # plot for debug
-    plt.loglog(wl, fe)
     if plotOn:
+        plt.loglog(wl, fe)
         plt.show()
-    else:
-        plt.close()
+    #else:
+    #    plt.close()
 
     # check
     if fe.min() < 0e0:

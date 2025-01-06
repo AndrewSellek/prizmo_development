@@ -289,12 +289,12 @@ def get_jpd(E, Z, arange):
     fint = np.array([get_sigma_pdt(E, a, Z) * a**pslope for a in arange]) * fp
 
     if fint.min() < 0e0:
-        plt.loglog(arange, fint)
-        plt.loglog(arange, -fint)
         if plotOn:
+            plt.loglog(arange, fint)
+            plt.loglog(arange, -fint)
             plt.show()
-        else:
-            plt.close()
+        #else:
+        #    plt.close()
         sys.exit("min(Jpd) < 0, E: %e, Z: %d" % (E, Z))
 
     anorm = 4. / 3. * np.pi * rho_bulk * (amax**p4 - amin**p4) / p4
@@ -462,9 +462,10 @@ def plot_test():
         # y = [get_pet_heating_int(x, a, Z) * (x >= get_epet(a, Z)).astype(int) for x in erange]
         #y = [a**p2 * a * get_y(E, a, Z, get_eps2, get_y0_WD06) * 1e1**get_qabs(np.log10(a), np.log10(E))[0]
         #             * get_pet_heating_int(E, a, Z) / E / anorm / hplanck for E in erange]
-        plt.loglog(erange / ev2erg, y, label=aa)
-    plt.legend(loc="best")
+        if plotOn:
+            plt.loglog(erange / ev2erg, y, label=aa)
     if plotOn:
+        plt.legend(loc="best")
         plt.show()
-    else:
-        plt.close()
+    #else:
+    #    plt.close()

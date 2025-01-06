@@ -54,11 +54,11 @@ def prepare(user_energy):
     kappa = compute_kabs_integral(user_energy, fk)
     print("kabs integral 912-1100 AA:", kappa)
 
-    plt.loglog(user_energy * erg2ev, fk)
     if plotOn:
+        plt.loglog(user_energy * erg2ev, fk)
         plt.show()
-    else:
-        plt.close()
+    #else:
+    #    plt.close()
 
     np.savetxt(fname, fk.T)
 

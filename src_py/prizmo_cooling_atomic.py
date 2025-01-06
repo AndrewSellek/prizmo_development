@@ -248,8 +248,8 @@ def rate2fit(expr, species, collider, gu, strength=False):
         plt.title("%s + %s" % (species, collider))
         plt.loglog(trange, f)
         plt.show()
-    else:
-        plt.close()
+    #else:
+    #    plt.close()
 
     return trange, f
 
@@ -555,9 +555,10 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
                 print("ERROR: negative rate coefficient in %s cooling, collider %s!" % (species, collider))
                 print(kul.min(), klu.min())
                 plt.clf()
-                plt.loglog(trange, kul)
-                plt.loglog(trange, klu)
-                plt.show()
+                if plotOn:
+                    plt.loglog(trange, kul)
+                    plt.loglog(trange, klu)
+                    plt.show()
             data["rates"][collider][up, low] = interp1d(np.log10(trange), np.log10(kul))
             data["rates"][collider][low, up] = interp1d(np.log10(trange), np.log10(klu))
             
@@ -616,9 +617,10 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
                     print("ERROR: negative rate coefficient in %s cooling, collider %s!" % (species, collider))
                     print(kul.min(), klu.min())
                     plt.clf()
-                    plt.loglog(trange, kul)
-                    plt.loglog(trange, klu)
-                    plt.show()
+                    if plotOn:
+                        plt.loglog(trange, kul)
+                        plt.loglog(trange, klu)
+                        plt.show()
                 data["rates_m"][collider][u, l] = interp1d(np.log10(trange), np.log10(kul))
                 data["rates_m"][collider][l, u] = interp1d(np.log10(trange), np.log10(klu))
 

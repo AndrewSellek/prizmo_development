@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.interpolate import interp2d
+from scipy.interpolate import RegularGridInterpolator
 from prizmo_commons import print_title, plotOn, data_dir
 
 
@@ -38,13 +38,14 @@ def shielding_H2(nt=100, nn=30):
                 + w / np.sqrt(1e0 + x) * np.exp(-8.5e-4 * np.sqrt(1e0 + x))
 
             out += "%.18e %.18e %.18e\n" % (n, t, f[i])
-        plt.loglog(trange, f, label="%.2e" % n)
+        if plotOn:
+            plt.loglog(trange, f, label="%.2e" % n)
 
-    plt.legend(loc="best")
     if plotOn:
+        plt.legend(loc="best")
         plt.show()
-    else:
-        plt.close()
+    #else:
+    #    plt.close()
 
     fout = open(data_dir+"shielding_H2.dat", "w")
     fout.write(out)
@@ -84,13 +85,13 @@ def shielding_CO(nco=50, nh2=50):
 
     NCO = np.array(NCO)
     NH2 = np.array(NH2)
-    shield = np.array(shield).reshape((len(NH2), len(NCO))).T
-    f_shield = interp2d(np.log10(NH2), np.log10(NCO), np.log10(shield))
+    shield = np.array(shield).reshape((len(NH2), len(NCO)))
+    f_shield = RegularGridInterpolator((np.log10(NH2), np.log10(NCO)), np.log10(shield))
 
     out = ""
     for xNCO in np.logspace(np.log10(NCO.min()), np.log10(NCO).max(), nco):
         for xNH2 in np.logspace(np.log10(NH2.min()), np.log10(NH2).max(), nh2):
-            out += "%.18e %.18e %.18e\n" % (xNCO, xNH2, 1e1**f_shield(np.log10(xNH2), np.log10(xNCO)) + 1e-40)
+            out += "%.18e %.18e %.18e\n" % (xNCO, xNH2, 1e1**f_shield((np.log10(xNH2), np.log10(xNCO))) + 1e-40)
 
     fh = open(data_dir+"shielding_CO.dat", "w")
     fh.write(out)

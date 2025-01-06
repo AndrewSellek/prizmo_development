@@ -392,7 +392,10 @@ def prepare_external_spec(energy, spectrum, L_X=1e30, X_lo=1e2, X_hi=1e4, rstar=
             F_interp = interp1d(np.log10(nuHz * hplanck_eV), np.log10(F_nu), bounds_error=False, fill_value=-np.inf)
             bfield = 1e1**F_interp(np.log10(energy * erg2ev))
         X_band = (energy * erg2ev > X_lo) * (energy * erg2ev < X_hi)        
-        L_band = integrate.trapz(bfield[X_band], energy[X_band]/hplanck)
+        try:
+            L_band = integrate.trapezoid(bfield[X_band], energy[X_band]/hplanck)
+        except AttributeError:
+            L_band = integrate.trapz(bfield[X_band], energy[X_band]/hplanck)
         Multiplier = L_X/L_band
         bfield *= Multiplier
         bfield /= (4*np.pi**2*rstar**2)
@@ -406,7 +409,10 @@ def prepare_external_spec(energy, spectrum, L_X=1e30, X_lo=1e2, X_hi=1e4, rstar=
         F_interp = interp1d(np.log10(EkeV*1000), np.log10(F_nu), bounds_error=False, fill_value="extrapolate")
         bfield = 1e1**F_interp(np.log10(energy * erg2ev))
         X_band = (energy * erg2ev > X_lo) * (energy * erg2ev < X_hi)        
-        L_band = integrate.trapz(bfield[X_band], energy[X_band]/hplanck)
+        try:
+            L_band = integrate.trapezoid(bfield[X_band], energy[X_band]/hplanck)
+        except AttributeError:
+            L_band = integrate.trapz(bfield[X_band], energy[X_band]/hplanck)
         Multiplier = L_X/L_band
         bfield *= Multiplier
         bfield /= (4*np.pi**2*rstar**2)        

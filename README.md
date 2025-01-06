@@ -3,7 +3,7 @@
 - It preprocesses the input information to write optimized FORTRAN code.
 - It has a C interface that allows it to be coupled with codes like PLUTO.
 - The earlier code is described in [https://arxiv.org/abs/2004.04748] (Grassi et al. 2020)
-- The newer version is discussed in (Sellek et al. 2024, in prep)
+- The newer version is discussed in [https://arxiv.org/abs/2408.00848] (Sellek et al. 2024)
 
 ![plot](./assets/disk.png)
 
@@ -44,10 +44,12 @@ PRIZMO's preprocessor has default values for many choices. However, these can be
 * chemNet - the chemical network specified as a list of reactions
 * atomData - the file containing the details of level energies and fits for the de-exciation rates for the atomic cooling
 * radiation_type - details of the spectrum to use
+* BB_params - parameters describing a stellar blackbody
 * nphoto - the number of energy bins to use
 * energy_minmax - the minimum and maximum energies to use (eV)
 * dust_minmax - the minimum and maximum dust grain sizes to use (cm)
 * refInd_file - the file containing the refractive indices for the dust
+* NCPAH - the number of carbon atoms per molecule to assume for the PAH opacity calculation
 The command line arguments that were used are logged in a readme file in the runtime_data folder
 
 Note: When you change radiation or dust properties, it is recommended that the contents of the runtime_data folder be deleted!
@@ -61,7 +63,7 @@ The first example is `main.f90`, it is written in FORTRAN and simulates a static
 make
 ./test
 ```
-The compiler automatically searches for Intel Fortran, otherwise uses `gfortran`.    
+The makefile automatically searches for Intel Fortran, otherwise uses `gfortran`.    
 
 ### C
 The example test `main_c.c` evolves a single cell, and it is intended to show how to call PRIZMO from C.

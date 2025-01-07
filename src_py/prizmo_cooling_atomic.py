@@ -58,6 +58,12 @@ def prepare_atomic_cooling_levels(H2_inc, fname="../data/atomic_cooling/krome_da
         cool_tot += ct
         lineFuncs += lFs
         lineFuncs_c += lFcs
+        
+    if plotOn:
+        plt.ylim([1e-12,1e-6])
+        plt.axvline(8000, color='black', linestyle=':')
+        plt.legend()
+        plt.show()
 
     commons += "real*8,parameter::natomic_cools=%d\n" % (icount + 1)
 
@@ -244,7 +250,7 @@ def rate2fit(expr, species, collider, gu, strength=False):
     if strength:
         f*=8.629e-8/gu/np.sqrt(trange/1.0e4)
 
-    if plotOn:
+    if plotOn and False:
         plt.title("%s + %s" % (species, collider))
         plt.loglog(trange, f)
         plt.show()
@@ -455,7 +461,7 @@ def prepare_xlevel(data, atom, nlevels, H2_inc, nt=10000, multiplet_hierachy=Fal
         for j in range(i):
             nline+=1
             de = data["deltaE"][i] - data["deltaE"][j]
-            lin += "  lines(%d) = n(%d) * %s * %s\n" % (nline, i+1, py2f90(data["Aul"][i, j]), py2f90(de))
+            lin += "  lines(%d) = n(%d) * %s * %s * x(%s)\n" % (nline, i+1, py2f90(data["Aul"][i, j]), py2f90(de), sp2idx(atom))
 
     fun = fun.replace("x(x(idx_H2pa))", "x(idx_H2) / (ortho_to_para + 1d0)")
     fun = fun.replace("x(x(idx_H2or))", "x(idx_H2) * ortho_to_para / (ortho_to_para + 1d0)")
@@ -485,7 +491,7 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
             "rates": dict(),
             "rates_m": dict(),
             "collider_max": dict()}
-
+            
     def fzero(arg):
         return -99.
 
@@ -559,6 +565,9 @@ def krome_cooling(species, fname="../data/atomic_cooling/krome_data.dat"):
                     plt.loglog(trange, kul)
                     plt.loglog(trange, klu)
                     plt.show()
+            if plotOn and up==1 and low==0 and ('Ne' in species or 'Ar' in species):
+                cols = {'Ne+': 'lightblue', 'Ne++': 'darkblue', 'Ar+': 'lightgreen', 'Ar++': 'darkgreen'}
+                plt.loglog(trange, klu, label=species+' + '+collider, linestyle='-'+'-'*(collider=='e'), color=cols[species])
             data["rates"][collider][up, low] = interp1d(np.log10(trange), np.log10(kul))
             data["rates"][collider][low, up] = interp1d(np.log10(trange), np.log10(klu))
             

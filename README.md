@@ -63,7 +63,7 @@ The first example is `main.f90`, it is written in FORTRAN and simulates a static
 make
 ./test
 ```
-The makefile automatically searches for Intel Fortran, otherwise uses `gfortran`.    
+The makefile automatically searches for Intel Fortran (first ifx, then ifort), otherwise uses `gfortran`.    
 
 ### C
 The example test `main_c.c` evolves a single cell, and it is intended to show how to call PRIZMO from C.

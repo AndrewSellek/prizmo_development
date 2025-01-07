@@ -3,15 +3,25 @@ exe = test
 
 -include Makefile_pragmas
 
-# test if ifort is present
-wres = $(shell which ifort > /dev/null; echo $$?)
-ifeq "$(wres)" "0"
-	fc = ifort
-	switchOPT = -O3 -g -traceback -xHost -fp-model=precise -fpp
+# test if ifort/ifx is present
+wres0 = $(shell which ifort > /dev/null; echo $$?)
+wres1 = $(shell which ifx > /dev/null; echo $$?)
+ifeq "$(wres1)" "0"
+	fc = ifx
+	switchOPT = -O3 -xHost -g -traceback
 	#switchOPT += -no-prec-sqrt
-	switchDBG = -O0 -check all -warn all -fpp -save-temps
+	switchDBG = -O0 -check all -warn all
 	switchDBG += -fpe0 -u -traceback -warn nounused -g
-	switchDBG += -init=snan,zero,arrays -ftrapuv -check noarg_temp_created $(pragmas)
+	switchDBG += -init=snan,zero,arrays -ftrapuv -check noarg_temp_created
+	switchOMP = -qopenmp
+	nowarn = -nowarn
+else ifeq "$(wres0)" "0"
+	fc = ifort
+	switchOPT = -O3 -xHost -g -traceback
+	#switchOPT += -no-prec-sqrt
+	switchDBG = -O0 -check all -warn all
+	switchDBG += -fpe0 -u -traceback -warn nounused -g
+	switchDBG += -init=snan,zero,arrays -ftrapuv -check noarg_temp_created
 	switchOMP = -qopenmp
 	nowarn = -nowarn
 else
@@ -70,6 +80,7 @@ objs += prizmo_cooling.o
 objs += prizmo_ode.o
 objs += prizmo_attenuate.o
 objs += prizmo_core.o
+objs += prizmo_lines_atomic.o
 objs += prizmo.o
 
 obj_main = main.o

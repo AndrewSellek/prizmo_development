@@ -296,7 +296,7 @@ PROTOTYPE[1.00d-14 + VAR1_15 * Tgas14**(VAR2_15) * (1 + VAR3_15 * exp(VAR4_15*Tg
   O++ + H -> O+ + H+                            [1.0e2,1.0e5]   1.00d-14 + 1.04e-09 * Tgas14**(0.27) * (1 + 2.02 * exp(-5.92*Tgas14))
 }
 
-# METAL RECOMBINATION
+# METAL RECOMBINATION - SHULL & VAN STEENBERG 1982
 #PROTOTYPE[VAR1_09 * invTgas14_065]{
 #  C+ + E -> C                              [] 4.700000e-13 * invTgas14_065 ! / Tgas14**(0.62)
 #  C++ + E -> C+                            [] 2.300000e-12 * invTgas14_065 ! / Tgas14**(0.65)
@@ -308,14 +308,14 @@ PROTOTYPE[1.00d-14 + VAR1_15 * Tgas14**(VAR2_15) * (1 + VAR3_15 * exp(VAR4_15*Tg
 #  Ar++ + E -> Ar+                          [] 1.950000e-12 * invTgas14_065 ! / Tgas14**(0.75)
 #}
 PROTOTYPE[VAR1_09 / Tgas14**(VAR2_09)]{
-  C+ + E -> C                              [] 4.700000e-13 / Tgas14**(0.62)
-  C++ + E -> C+                            [] 2.300000e-12 / Tgas14**(0.65)
-  O+ + E -> O                              [] 3.100000e-13 / Tgas14**(0.68)
-  O++ + E -> O+                            [] 2.000000e-12 / Tgas14**(0.65)
-  Ne+ + E -> Ne                            [] 2.000000e-13 / Tgas14**(0.76)
-  Ne++ + E -> Ne+                          [] 1.500000e-12 / Tgas14**(0.69)
-  Ar+ + E -> Ar                            [] 3.770000e-13 / Tgas14**(0.65)
-  Ar++ + E -> Ar+                          [] 1.950000e-12 / Tgas14**(0.75)
+  C+ + E -> C                              [] 4.700000e-13 / Tgas14**(0.624)
+  C++ + E -> C+                            [] 2.300000e-12 / Tgas14**(0.645)
+  O+ + E -> O                              [] 3.100000e-13 / Tgas14**(0.678)
+  O++ + E -> O+                            [] 2.000000e-12 / Tgas14**(0.646)
+  Ne+ + E -> Ne                            [] 2.200000e-13 / Tgas14**(0.759)
+  Ne++ + E -> Ne+                          [] 1.500000e-12 / Tgas14**(0.63)
+  Ar+ + E -> Ar                            [] 3.770000e-13 / Tgas14**(0.651)
+  Ar++ + E -> Ar+                          [] 1.950000e-12 / Tgas14**(0.752)
 }
 
 ## SURFACE CHEMISTRY
